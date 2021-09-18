@@ -149,7 +149,7 @@ pub struct InitializeXMint<'info> {
     #[account(
         init,
         payer = initializer,
-        mint::decimals = 9,
+        mint::decimals = token_mint.decimals,
         mint::authority = x_token_mint,
         seeds = [ "mint".as_ref(), token_mint.key().as_ref() ],
         bump,
@@ -185,7 +185,7 @@ pub struct InitializeXMint<'info> {
 #[instruction(mint_bump: u8)]
 pub struct Enter<'info> {
     pub token_mint: Account<'info, Mint>,
-    
+
     #[account(
         mut,
         seeds = [ b"mint", token_mint.key().as_ref() ],
