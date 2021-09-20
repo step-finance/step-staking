@@ -17,7 +17,7 @@ pub mod step_staking {
         Ok(())
     }
 
-    pub fn enter(ctx: Context<Enter>, mint_bump: u8, amount: u64) -> ProgramResult {
+    pub fn stake(ctx: Context<Stake>, mint_bump: u8, amount: u64) -> ProgramResult {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
 
@@ -61,7 +61,7 @@ pub mod step_staking {
         Ok(())
     }
 
-    pub fn exit(ctx: Context<Exit>, vault_bump: u8, amount: u64) -> ProgramResult {
+    pub fn unstake(ctx: Context<Unstake>, vault_bump: u8, amount: u64) -> ProgramResult {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
 
@@ -182,7 +182,7 @@ pub struct InitializeXMint<'info> {
 
 #[derive(Accounts)]
 #[instruction(mint_bump: u8)]
-pub struct Enter<'info> {
+pub struct Stake<'info> {
     pub token_mint: Account<'info, Mint>,
 
     #[account(
@@ -219,7 +219,7 @@ pub struct Enter<'info> {
 
 #[derive(Accounts)]
 #[instruction(vault_bump: u8)]
-pub struct Exit<'info> {
+pub struct Unstake<'info> {
     pub token_mint: Account<'info, Mint>,
 
     #[account(
