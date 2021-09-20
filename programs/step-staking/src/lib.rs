@@ -170,15 +170,14 @@ pub struct InitializeXMint<'info> {
 
     #[account(
         mut,
-        signer
     )]
     ///pays rent on the initializing accounts
-    pub initializer: AccountInfo<'info>,
+    pub initializer: Signer<'info>,
 
     ///used by anchor for init of the above
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
-    pub rent: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
@@ -199,11 +198,8 @@ pub struct Enter<'info> {
     //the token account to withdraw from
     pub token_from: Account<'info, TokenAccount>,
 
-    #[account(
-        signer,
-    )]
     //the authority allowed to transfer from token_from
-    pub token_from_authority: AccountInfo<'info>,
+    pub token_from_authority: Signer<'info>,
 
     #[account(
         mut,
@@ -239,11 +235,8 @@ pub struct Exit<'info> {
     //the token account to withdraw from
     pub x_token_from: Account<'info, TokenAccount>,
 
-    #[account(
-        signer,
-    )]
     //the authority allowed to transfer from x_token_from
-    pub x_token_from_authority: AccountInfo<'info>,
+    pub x_token_from_authority: Signer<'info>,
 
     #[account(
         mut,
