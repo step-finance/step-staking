@@ -80,7 +80,7 @@ describe('step-staking', () => {
   });
 
   it('Swap token for xToken', async () => {
-    await program.rpc.enter(
+    await program.rpc.stake(
       mintBump,
       new anchor.BN(5_000_000_000),
       {
@@ -110,8 +110,8 @@ describe('step-staking', () => {
   });
 
   it('Redeem xToken for token', async () => {
-    await program.rpc.exit(
-      mintBump,
+    await program.rpc.unstake(
+      vaultBump,
       new anchor.BN(5_000_000_000),
       {
         accounts: {
