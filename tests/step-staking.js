@@ -34,7 +34,7 @@ describe('step-staking', () => {
   let xMintPubkey;
   let mintBump;
 
-  //the programs vault for stored collateral against xToken minting
+  //the program's vault for stored collateral against xToken minting
   let vaultPubkey;
   let vaultBump;
 
