@@ -150,22 +150,22 @@ pub struct InitializeXMint<'info> {
         init,
         payer = initializer,
         mint::decimals = token_mint.decimals,
-        mint::authority = x_token_mint,
+        mint::authority = x_token_mint, //the PDA address is both the mint account and the authority
         seeds = [ "mint".as_ref(), token_mint.key().as_ref() ],
         bump,
     )]
-    ///the empty, non-initialized, derived xtoken mint pubkey
+    ///the not-yet-created, derived xtoken mint pubkey
     pub x_token_mint: Account<'info, Mint>,
 
     #[account(
         init,
-        token::mint = token_mint,
-        token::authority = token_vault,
         payer = initializer,
+        token::mint = token_mint,
+        token::authority = token_vault, //the PDA address is both the vault account and the authority
         seeds = [ "vault".as_ref(), token_mint.key().as_ref() ],
         bump,
     )]
-    ///the empty, non-initialized, derived token vault pubkey
+    ///the not-yet-created, derived token vault pubkey
     pub token_vault: Account<'info, TokenAccount>,
 
     #[account(
