@@ -88,8 +88,10 @@ pub mod step_staking {
         let new_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
         emit!(PriceChange {
-            old_step_per_xstep_e9: old_price,
-            new_step_per_xstep_e9: new_price,
+            old_step_per_xstep_e9: old_price.0,
+            old_step_per_xstep: old_price.1,
+            new_step_per_xstep_e9: new_price.0,
+            new_step_per_xstep: new_price.1,
         });
 
         Ok(())
@@ -143,8 +145,10 @@ pub mod step_staking {
         let new_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
         emit!(PriceChange {
-            old_step_per_xstep_e9: old_price,
-            new_step_per_xstep_e9: new_price,
+            old_step_per_xstep_e9: old_price.0,
+            old_step_per_xstep: old_price.1,
+            new_step_per_xstep_e9: new_price.0,
+            new_step_per_xstep: new_price.1,
         });
 
         Ok(())
@@ -153,24 +157,27 @@ pub mod step_staking {
     pub fn emit_price(ctx: Context<EmitPrice>) -> ProgramResult {
         let price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
         emit!(Price {
-            step_per_xstep_e9: price
+            step_per_xstep_e9: price.0,
+            step_per_xstep: price.1,
         });
         Ok(())
     }
 
 }
 
-pub fn get_price<'info>(vault: &Account<'info, TokenAccount>, mint: &Account<'info, Mint>) -> u64 {
+pub fn get_price<'info>(vault: &Account<'info, TokenAccount>, mint: &Account<'info, Mint>) -> (u64, String) {
     let total_token = vault.amount;
     let total_x_token = mint.supply;
-    if total_x_token == 0 { 
-        0 
+    let price_uint = if total_x_token == 0 { 
+        return (0, String::from("0"))
     } else { 
         (total_token as u128)
         .checked_mul(1000000000 as u128).unwrap()
         .checked_div(total_x_token as u128).unwrap()
         .try_into().unwrap()
-    }
+    };
+    let price_float = (total_token as f64) / (total_x_token as f64);
+    return (price_uint, price_float.to_string());
 }
 
 #[derive(Accounts)]
@@ -306,10 +313,13 @@ pub struct EmitPrice<'info> {
 #[event]
 pub struct PriceChange {
     pub old_step_per_xstep_e9: u64,
+    pub old_step_per_xstep: String,
     pub new_step_per_xstep_e9: u64,
+    pub new_step_per_xstep: String,
 }
 
 #[event]
 pub struct Price {
     pub step_per_xstep_e9: u64,
+    pub step_per_xstep: String,
 }
