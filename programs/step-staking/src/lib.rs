@@ -1,50 +1,73 @@
-///A Solana version of the xSushi contract
+///A Solana version of the xSushi contract for STEP
 /// https://github.com/sushiswap/sushiswap/blob/master/contracts/SushiBar.sol
-/// One notable difference: Given the way that accounts in Solana work,
-/// this program is able to create an spl xToken and backing vault for any spl token
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, Mint, TokenAccount};
 use std::convert::TryInto;
 
-declare_id!("SStKpS5KY2nSyjnTNWXvQGdWJTnFhHP8FncqAUJWdzF");
+#[cfg(feature = "production")]
+declare_id!("UNKNOWN" fail build );
+#[cfg(not(feature = "production"))]
+declare_id!("STak7gf65TjoPaJvttZvinbgLy3vMMsB1ikDx1bK2mH");
+
+#[cfg(feature = "production")]
+const STEP_TOKEN_MINT_PUBKEY: &str = "StepAscQoEioFxxWGnh2sLBDFp9d8rvKz2Yp39iDpyT";
+#[cfg(not(feature = "production"))]
+const STEP_TOKEN_MINT_PUBKEY: &str = "sTEPVXgcctP7rJvoNk8p2Xmo1YrMbcMfu4tgHnowtFm";
+
+#[cfg(feature = "production")]
+const X_STEP_TOKEN_MINT_PUBKEY: &str = "xStpgUCss9piqeFUk2iLVcvJEGhAdJxJQuwLkXP555G";
+#[cfg(not(feature = "production"))]
+const X_STEP_TOKEN_MINT_PUBKEY: &str = "xsTPvEj7rELYcqe2D1k3M5zRe85xWWFK3x1SWDN5qPY";
 
 #[program]
 pub mod step_staking {
     use super::*;
 
-    pub fn initialize_x_mint(_ctx: Context<InitializeXMint>) -> ProgramResult {
+    pub fn initialize(_ctx: Context<Initialize>, nonce: u8) -> ProgramResult {
         Ok(())
     }
 
-    pub fn stake(ctx: Context<Stake>, mint_bump: u8, amount: u64) -> ProgramResult {
+    pub fn stake(ctx: Context<Stake>, nonce: u8, amount: u64) -> ProgramResult {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
+
+        let token_mint_key = ctx.accounts.token_mint.key();
+        let seeds = &[
+            token_mint_key.as_ref(),
+            &[nonce],
+        ];
+        let signer = [&seeds[..]];
 
         //mint x tokens
         if total_token == 0 && total_x_token == 0 {
             //no math reqd, we mint them the amount they sent us
-            mint_to(
-                &ctx.accounts.token_program.to_account_info(),
-                &ctx.accounts.x_token_mint.to_account_info(),
-                &ctx.accounts.x_token_to.to_account_info(),
-                &ctx.accounts.token_mint.to_account_info(),
-                mint_bump,
-                amount,
-            )?;
+            let cpi_ctx = CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                token::MintTo {
+                    mint: ctx.accounts.x_token_mint.to_account_info(),
+                    to: ctx.accounts.x_token_to.to_account_info(),
+                    authority: ctx.accounts.token_vault.to_account_info(), 
+                },
+                &signer,
+            );
+            token::mint_to(cpi_ctx, amount)?;
         } else {
             let what: u64 = 
                 (amount as u128).checked_mul(total_x_token as u128).unwrap()
                                 .checked_div(total_token as u128).unwrap()
                                 .try_into().unwrap();
-            mint_to(
-                &ctx.accounts.token_program.to_account_info(),
-                &ctx.accounts.x_token_mint.to_account_info(),
-                &ctx.accounts.x_token_to.to_account_info(),
-                &ctx.accounts.token_mint.to_account_info(),
-                mint_bump,
-                what,
-            )?;
+                                
+            let cpi_ctx = CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                token::MintTo {
+                    mint: ctx.accounts.x_token_mint.to_account_info(),
+                    to: ctx.accounts.x_token_to.to_account_info(),
+                    authority: ctx.accounts.token_vault.to_account_info(), 
+                },
+                &signer,
+            );
+            token::mint_to(cpi_ctx, what)?;
         }
 
         //transfer the users tokens to the vault
@@ -61,7 +84,7 @@ pub mod step_staking {
         Ok(())
     }
 
-    pub fn unstake(ctx: Context<Unstake>, vault_bump: u8, amount: u64) -> ProgramResult {
+    pub fn unstake(ctx: Context<Unstake>, nonce: u8, amount: u64) -> ProgramResult {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
 
@@ -85,9 +108,8 @@ pub mod step_staking {
         //compute vault signer seeds
         let token_mint_key = ctx.accounts.token_mint.key();
         let seeds = &[
-            b"vault",
             token_mint_key.as_ref(),
-            &[vault_bump],
+            &[nonce],
         ];
         let signer = &[&seeds[..]];
 
@@ -108,62 +130,21 @@ pub mod step_staking {
 
 }
 
-//helper functions
-fn mint_to<'info>(
-    token_program: &AccountInfo<'info>,
-    mint: &AccountInfo<'info>, 
-    to: &AccountInfo<'info>, 
-    seed_account: &AccountInfo<'info>, 
-    mint_bump: u8,
-    amount: u64,
-) -> ProgramResult {
-    //compute x_token authority mint seeds
-    //note, the x_token authority is itself :mindblown:
-    let token_mint_key = seed_account.key();
-    let seeds = &[
-        b"mint",
-        token_mint_key.as_ref(),
-        &[mint_bump],
-    ];
-    let signer = &[&seeds[..]];
-
-    let cpi_ctx = CpiContext::new_with_signer(
-        token_program.clone(),
-        token::MintTo {
-            mint: mint.clone(),
-            to: to.clone(),
-            authority: mint.clone(), 
-        },
-        signer,
-    );
-    token::mint_to(cpi_ctx, amount)?;
-
-    Ok(())
-}
-
 #[derive(Accounts)]
-pub struct InitializeXMint<'info> {
-    ///the token mint to create an xToken for
+#[instruction(nonce: u8)]
+pub struct Initialize<'info> {
+    #[account(
+        address = STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+    )]
     pub token_mint: Account<'info, Mint>,
 
     #[account(
         init,
         payer = initializer,
-        mint::decimals = token_mint.decimals,
-        mint::authority = x_token_mint, //the PDA address is both the mint account and the authority
-        seeds = [ "mint".as_ref(), token_mint.key().as_ref() ],
-        bump,
-    )]
-    ///the not-yet-created, derived xtoken mint pubkey
-    pub x_token_mint: Account<'info, Mint>,
-
-    #[account(
-        init,
-        payer = initializer,
         token::mint = token_mint,
-        token::authority = token_vault, //the PDA address is both the vault account and the authority
-        seeds = [ "vault".as_ref(), token_mint.key().as_ref() ],
-        bump,
+        token::authority = token_vault, //the PDA address is both the vault account and the authority (and event the mint authority)
+        seeds = [ STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap().as_ref() ],
+        bump = nonce,
     )]
     ///the not-yet-created, derived token vault pubkey
     pub token_vault: Account<'info, TokenAccount>,
@@ -174,21 +155,23 @@ pub struct InitializeXMint<'info> {
     ///pays rent on the initializing accounts
     pub initializer: Signer<'info>,
 
-    ///used by anchor for init of the above
+    ///used by anchor for init of the token
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
-#[instruction(mint_bump: u8)]
+#[instruction(nonce: u8)]
 pub struct Stake<'info> {
+    #[account(
+        address = STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+    )]
     pub token_mint: Account<'info, Mint>,
 
     #[account(
         mut,
-        seeds = [ b"mint", token_mint.key().as_ref() ],
-        bump = mint_bump,
+        address = X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
     pub x_token_mint: Account<'info, Mint>,
 
@@ -203,8 +186,8 @@ pub struct Stake<'info> {
 
     #[account(
         mut,
-        seeds = [ b"vault", token_mint.key().as_ref() ],
-        bump,
+        seeds = [ token_mint.key().as_ref() ],
+        bump = nonce,
     )]
     pub token_vault: Account<'info, TokenAccount>,
 
@@ -218,14 +201,16 @@ pub struct Stake<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(vault_bump: u8)]
+#[instruction(nonce: u8)]
 pub struct Unstake<'info> {
+    #[account(
+        address = STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+    )]
     pub token_mint: Account<'info, Mint>,
 
     #[account(
         mut,
-        seeds = [ b"mint", token_mint.key().as_ref() ],
-        bump,
+        address = X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
     pub x_token_mint: Account<'info, Mint>,
 
@@ -240,8 +225,8 @@ pub struct Unstake<'info> {
 
     #[account(
         mut,
-        seeds = [ b"vault", token_mint.key().as_ref() ],
-        bump = vault_bump,
+        seeds = [ token_mint.key().as_ref() ],
+        bump = nonce,
     )]
     pub token_vault: Account<'info, TokenAccount>,
 
