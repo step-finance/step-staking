@@ -37,6 +37,13 @@ describe('step-staking', () => {
   let vaultBump;
 
   it('Is initialized!', async () => {
+    //setup logging event listeners
+    program.addEventListener('PriceChange', (e, s) => {
+      console.log('Price Change In Slot ', s);
+      console.log('From', e.oldStepPerXstepE9.toString());
+      console.log('To', e.newStepPerXstepE9.toString());
+    });
+
     //this already exists in ecosystem
     //test step token hardcoded in program, mint authority is wallet for testing
     let rawdata = fs.readFileSync('tests/keys/TESTING-sTEPVXgcctP7rJvoNk8p2Xmo1YrMbcMfu4tgHnowtFm.json');
@@ -106,7 +113,7 @@ describe('step-staking', () => {
         }
       }
     );
-
+    
     assert.strictEqual(await getTokenBalance(walletTokenAccount), 95_000_000_000);
     assert.strictEqual(await getTokenBalance(walletXTokenAccount), 5_000_000_000);
     assert.strictEqual(await getTokenBalance(vaultPubkey), 5_000_000_000);
@@ -118,6 +125,20 @@ describe('step-staking', () => {
     assert.strictEqual(await getTokenBalance(walletTokenAccount), 95_000_000_000);
     assert.strictEqual(await getTokenBalance(walletXTokenAccount), 5_000_000_000);
     assert.strictEqual(await getTokenBalance(vaultPubkey), 6_000_000_000);
+  });
+
+  it('Emit the price', async () => {
+    var res = await program.simulate.emitPrice(
+      {
+        accounts: {
+          tokenMint: mintPubkey,
+          xTokenMint: xMintPubkey,
+          tokenVault: vaultPubkey,
+        }
+      }
+    )
+    let price = res.events[0].data;
+    console.log('Emit price: ', price.stepPerXstepE9.toString());
   });
 
   it('Redeem xToken for token', async () => {

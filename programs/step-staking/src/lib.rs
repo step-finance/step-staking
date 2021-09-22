@@ -24,13 +24,14 @@ const X_STEP_TOKEN_MINT_PUBKEY: &str = "xsTPvEj7rELYcqe2D1k3M5zRe85xWWFK3x1SWDN5
 pub mod step_staking {
     use super::*;
 
-    pub fn initialize(_ctx: Context<Initialize>, nonce: u8) -> ProgramResult {
+    pub fn initialize(_ctx: Context<Initialize>, _nonce: u8) -> ProgramResult {
         Ok(())
     }
 
     pub fn stake(ctx: Context<Stake>, nonce: u8, amount: u64) -> ProgramResult {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
+        let old_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
         let token_mint_key = ctx.accounts.token_mint.key();
         let seeds = &[
@@ -81,12 +82,23 @@ pub mod step_staking {
         );
         token::transfer(cpi_ctx, amount)?;
 
+        (&mut ctx.accounts.token_vault).reload()?;
+        (&mut ctx.accounts.x_token_mint).reload()?;
+        
+        let new_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
+
+        emit!(PriceChange {
+            old_step_per_xstep_e9: old_price,
+            new_step_per_xstep_e9: new_price,
+        });
+
         Ok(())
     }
 
     pub fn unstake(ctx: Context<Unstake>, nonce: u8, amount: u64) -> ProgramResult {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
+        let old_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
         //burn what is being sent
         let cpi_ctx = CpiContext::new(
@@ -124,14 +136,45 @@ pub mod step_staking {
             signer,
         );
         token::transfer(cpi_ctx, what)?;
+
+        (&mut ctx.accounts.token_vault).reload()?;
+        (&mut ctx.accounts.x_token_mint).reload()?;
         
+        let new_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
+
+        emit!(PriceChange {
+            old_step_per_xstep_e9: old_price,
+            new_step_per_xstep_e9: new_price,
+        });
+
+        Ok(())
+    }
+
+    pub fn emit_price(ctx: Context<EmitPrice>) -> ProgramResult {
+        let price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
+        emit!(Price {
+            step_per_xstep_e9: price
+        });
         Ok(())
     }
 
 }
 
+pub fn get_price<'info>(vault: &Account<'info, TokenAccount>, mint: &Account<'info, Mint>) -> u64 {
+    let total_token = vault.amount;
+    let total_x_token = mint.supply;
+    if total_x_token == 0 { 
+        0 
+    } else { 
+        (total_token as u128)
+        .checked_mul(1000000000 as u128).unwrap()
+        .checked_div(total_x_token as u128).unwrap()
+        .try_into().unwrap()
+    }
+}
+
 #[derive(Accounts)]
-#[instruction(nonce: u8)]
+#[instruction(_nonce: u8)]
 pub struct Initialize<'info> {
     #[account(
         address = STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
@@ -144,7 +187,7 @@ pub struct Initialize<'info> {
         token::mint = token_mint,
         token::authority = token_vault, //the PDA address is both the vault account and the authority (and event the mint authority)
         seeds = [ STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap().as_ref() ],
-        bump = nonce,
+        bump = _nonce,
     )]
     ///the not-yet-created, derived token vault pubkey
     pub token_vault: Account<'info, TokenAccount>,
@@ -237,4 +280,36 @@ pub struct Unstake<'info> {
     pub token_to: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct EmitPrice<'info> {
+    #[account(
+        address = STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+    )]
+    pub token_mint: Account<'info, Mint>,
+
+    #[account(
+        mut,
+        address = X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+    )]
+    pub x_token_mint: Account<'info, Mint>,
+
+    #[account(
+        mut,
+        seeds = [ token_mint.key().as_ref() ],
+        bump,
+    )]
+    pub token_vault: Account<'info, TokenAccount>,
+}
+
+#[event]
+pub struct PriceChange {
+    pub old_step_per_xstep_e9: u64,
+    pub new_step_per_xstep_e9: u64,
+}
+
+#[event]
+pub struct Price {
+    pub step_per_xstep_e9: u64,
 }
