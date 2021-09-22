@@ -41,7 +41,9 @@ describe('step-staking', () => {
     program.addEventListener('PriceChange', (e, s) => {
       console.log('Price Change In Slot ', s);
       console.log('From', e.oldStepPerXstepE9.toString());
+      console.log('From', e.oldStepPerXstep.toString());
       console.log('To', e.newStepPerXstepE9.toString());
+      console.log('To', e.newStepPerXstep.toString());
     });
 
     //this already exists in ecosystem
@@ -139,6 +141,7 @@ describe('step-staking', () => {
     )
     let price = res.events[0].data;
     console.log('Emit price: ', price.stepPerXstepE9.toString());
+    console.log('Emit price: ', price.stepPerXstep.toString());
   });
 
   it('Redeem xToken for token', async () => {
