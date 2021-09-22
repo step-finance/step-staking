@@ -2,6 +2,7 @@ const anchor = require('@project-serum/anchor');
 const { TOKEN_PROGRAM_ID, Token } = require("@solana/spl-token");
 const utils = require("./utils");
 const assert = require("assert");
+const fs = require('fs');
 
 let program = anchor.workspace.StepStaking;
 
@@ -24,36 +25,48 @@ function setProvider(p) {
 setProvider(provider);
 
 describe('step-staking', () => {
-
-  //any existing ecosystem token
+  //hardcoded in program, read from test keys directory for testing
+  let mintKey;
   let mintObject;
   let mintPubkey;
-
-  //the ecosystems corresponding xToken
   let xMintObject;
   let xMintPubkey;
-  let mintBump;
 
   //the program's vault for stored collateral against xToken minting
   let vaultPubkey;
   let vaultBump;
 
   it('Is initialized!', async () => {
-    mintObject = await utils.createMint(provider, 9);
+    //this already exists in ecosystem
+    //test step token hardcoded in program, mint authority is wallet for testing
+    let rawdata = fs.readFileSync('tests/keys/TESTING-sTEPVXgcctP7rJvoNk8p2Xmo1YrMbcMfu4tgHnowtFm.json');
+    let keyData = JSON.parse(rawdata);
+    mintKey = anchor.web3.Keypair.fromSecretKey(new Uint8Array(keyData));
+    mintObject = await utils.createMint(mintKey, provider, provider.wallet.publicKey, null, 9, TOKEN_PROGRAM_ID);
     mintPubkey = mintObject.publicKey;
 
-    [xMintPubkey, mintBump] =
-      await anchor.web3.PublicKey.findProgramAddress(
-        [Buffer.from("mint"), mintPubkey.toBuffer()],
-        program.programId
-      );
     [vaultPubkey, vaultBump] =
       await anchor.web3.PublicKey.findProgramAddress(
-        [Buffer.from("vault"), mintPubkey.toBuffer()],
+        [mintPubkey.toBuffer()],
         program.programId
       );
 
-    await program.rpc.initializeXMint(
+    //this is the new xstep token
+    //test xstep token hardcoded in program, mint authority is token vault
+    rawdata = fs.readFileSync('tests/keys/TESTING-xsTPvEj7rELYcqe2D1k3M5zRe85xWWFK3x1SWDN5qPY.json');
+    keyData = JSON.parse(rawdata);
+    let key = anchor.web3.Keypair.fromSecretKey(new Uint8Array(keyData));
+    xMintObject = await utils.createMint(key, provider, vaultPubkey, null, 9, TOKEN_PROGRAM_ID);
+    xMintPubkey = xMintObject.publicKey;
+
+    [vaultPubkey, vaultBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [mintPubkey.toBuffer()],
+        program.programId
+      );
+
+    await program.rpc.initialize(
+      vaultBump,
       {
         accounts: {
           tokenMint: mintPubkey,
@@ -72,8 +85,6 @@ describe('step-staking', () => {
   let walletXTokenAccount;
 
   it('Mint test tokens', async () => {
-    xMintObject = new Token(provider.connection, xMintPubkey, TOKEN_PROGRAM_ID, provider.wallet.payer);
-
     walletTokenAccount = await mintObject.createAssociatedTokenAccount(provider.wallet.publicKey);
     walletXTokenAccount = await xMintObject.createAssociatedTokenAccount(provider.wallet.publicKey);
     await utils.mintToAccount(provider, mintPubkey, walletTokenAccount, 100_000_000_000);
@@ -81,7 +92,7 @@ describe('step-staking', () => {
 
   it('Swap token for xToken', async () => {
     await program.rpc.stake(
-      mintBump,
+      vaultBump,
       new anchor.BN(5_000_000_000),
       {
         accounts: {

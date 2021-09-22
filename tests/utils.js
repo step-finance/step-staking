@@ -1,7 +1,7 @@
 const anchor = require("@project-serum/anchor");
-const { TOKEN_PROGRAM_ID, Token } = require("@solana/spl-token");
+const { TOKEN_PROGRAM_ID, Token, MintLayout } = require("@solana/spl-token");
 
-async function createMint(provider, decimals) {
+async function createRandomMint(provider, decimals) {
     const mint = await Token.createMint(
         provider.connection,
         provider.wallet.payer,
@@ -51,8 +51,54 @@ async function sendLamports(
     await provider.send(tx);
 }
 
+async function createMint(
+    mintAccount,
+    provider,
+    mintAuthority,
+    freezeAuthority,
+    decimals,
+    programId,
+) {
+    const token = new Token(
+        provider.connection,
+        mintAccount.publicKey,
+        programId,
+        provider.wallet.payer,
+      );
+  
+    // Allocate memory for the account
+    const balanceNeeded = await Token.getMinBalanceRentForExemptMint(
+        provider.connection,
+    );
+
+    const transaction = new anchor.web3.Transaction();
+    transaction.add(
+        anchor.web3.SystemProgram.createAccount({
+            fromPubkey: provider.wallet.payer.publicKey,
+            newAccountPubkey: mintAccount.publicKey,
+            lamports: balanceNeeded,
+            space: MintLayout.span,
+            programId,
+        }),
+    );
+
+    transaction.add(
+        Token.createInitMintInstruction(
+            programId,
+            mintAccount.publicKey,
+            decimals,
+            mintAuthority,
+            freezeAuthority,
+        ),
+    );
+  
+    await provider.send(transaction, [mintAccount]);
+    return token;
+}
+
 
 module.exports = {
+    createRandomMint,
     createMint,
     mintToAccount,
     sendLamports,

@@ -12,8 +12,11 @@ name = "step_staking"
 no-entrypoint = []
 no-idl = []
 cpi = ["no-entrypoint"]
-default = []
+
+#remove for testing
+default = ["production"]
+production = []
 
 [dependencies]
-anchor-lang = "0.16.0"
-anchor-spl = "0.16.0"
+anchor-lang = "0.16.1"
+anchor-spl = "0.16.1"
