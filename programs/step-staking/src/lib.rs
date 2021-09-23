@@ -1,12 +1,11 @@
 ///A Solana version of the xSushi contract for STEP
 /// https://github.com/sushiswap/sushiswap/blob/master/contracts/SushiBar.sol
-
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, Mint, TokenAccount};
+use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use std::convert::TryInto;
 
 #[cfg(not(feature = "local-testing"))]
-declare_id!("UNKNOWN" fail build );
+declare_id!("Stk5NCWomVN3itaFjLu382u9ibb5jMSHEsh6CuhaGjB");
 #[cfg(feature = "local-testing")]
 declare_id!("STak7gf65TjoPaJvttZvinbgLy3vMMsB1ikDx1bK2mH");
 
@@ -34,10 +33,7 @@ pub mod step_staking {
         let old_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
         let token_mint_key = ctx.accounts.token_mint.key();
-        let seeds = &[
-            token_mint_key.as_ref(),
-            &[nonce],
-        ];
+        let seeds = &[token_mint_key.as_ref(), &[nonce]];
         let signer = [&seeds[..]];
 
         //mint x tokens
@@ -48,23 +44,26 @@ pub mod step_staking {
                 token::MintTo {
                     mint: ctx.accounts.x_token_mint.to_account_info(),
                     to: ctx.accounts.x_token_to.to_account_info(),
-                    authority: ctx.accounts.token_vault.to_account_info(), 
+                    authority: ctx.accounts.token_vault.to_account_info(),
                 },
                 &signer,
             );
             token::mint_to(cpi_ctx, amount)?;
         } else {
-            let what: u64 = 
-                (amount as u128).checked_mul(total_x_token as u128).unwrap()
-                                .checked_div(total_token as u128).unwrap()
-                                .try_into().unwrap();
-                                
+            let what: u64 = (amount as u128)
+                .checked_mul(total_x_token as u128)
+                .unwrap()
+                .checked_div(total_token as u128)
+                .unwrap()
+                .try_into()
+                .unwrap();
+
             let cpi_ctx = CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 token::MintTo {
                     mint: ctx.accounts.x_token_mint.to_account_info(),
                     to: ctx.accounts.x_token_to.to_account_info(),
-                    authority: ctx.accounts.token_vault.to_account_info(), 
+                    authority: ctx.accounts.token_vault.to_account_info(),
                 },
                 &signer,
             );
@@ -84,7 +83,7 @@ pub mod step_staking {
 
         (&mut ctx.accounts.token_vault).reload()?;
         (&mut ctx.accounts.x_token_mint).reload()?;
-        
+
         let new_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
         emit!(PriceChange {
@@ -112,19 +111,19 @@ pub mod step_staking {
             },
         );
         token::burn(cpi_ctx, amount)?;
-        
+
         //determine user share of vault
-        let what: u64 = 
-            (amount as u128).checked_mul(total_token as u128).unwrap()
-                            .checked_div(total_x_token as u128).unwrap()
-                            .try_into().unwrap();
-                            
+        let what: u64 = (amount as u128)
+            .checked_mul(total_token as u128)
+            .unwrap()
+            .checked_div(total_x_token as u128)
+            .unwrap()
+            .try_into()
+            .unwrap();
+
         //compute vault signer seeds
         let token_mint_key = ctx.accounts.token_mint.key();
-        let seeds = &[
-            token_mint_key.as_ref(),
-            &[nonce],
-        ];
+        let seeds = &[token_mint_key.as_ref(), &[nonce]];
         let signer = &[&seeds[..]];
 
         //transfer from vault to user
@@ -141,7 +140,7 @@ pub mod step_staking {
 
         (&mut ctx.accounts.token_vault).reload()?;
         (&mut ctx.accounts.x_token_mint).reload()?;
-        
+
         let new_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
         emit!(PriceChange {
@@ -162,23 +161,28 @@ pub mod step_staking {
         });
         Ok(())
     }
-
 }
 
 const E9: u128 = 1000000000;
 
-pub fn get_price<'info>(vault: &Account<'info, TokenAccount>, mint: &Account<'info, Mint>) -> (u64, String) {
+pub fn get_price<'info>(
+    vault: &Account<'info, TokenAccount>,
+    mint: &Account<'info, Mint>,
+) -> (u64, String) {
     let total_token = vault.amount;
     let total_x_token = mint.supply;
 
-    if total_x_token == 0 { 
-        return (0, String::from("0"))
+    if total_x_token == 0 {
+        return (0, String::from("0"));
     }
 
     let price_uint = (total_token as u128)
-        .checked_mul(E9 as u128).unwrap()
-        .checked_div(total_x_token as u128).unwrap()
-        .try_into().unwrap();
+        .checked_mul(E9 as u128)
+        .unwrap()
+        .checked_div(total_x_token as u128)
+        .unwrap()
+        .try_into()
+        .unwrap();
     let price_float = (total_token as f64) / (total_x_token as f64);
     return (price_uint, price_float.to_string());
 }
@@ -202,9 +206,7 @@ pub struct Initialize<'info> {
     ///the not-yet-created, derived token vault pubkey
     pub token_vault: Account<'info, TokenAccount>,
 
-    #[account(
-        mut,
-    )]
+    #[account(mut)]
     ///pays rent on the initializing accounts
     pub initializer: Signer<'info>,
 
@@ -228,9 +230,7 @@ pub struct Stake<'info> {
     )]
     pub x_token_mint: Account<'info, Mint>,
 
-    #[account(
-        mut,
-    )]
+    #[account(mut)]
     //the token account to withdraw from
     pub token_from: Account<'info, TokenAccount>,
 
@@ -244,9 +244,7 @@ pub struct Stake<'info> {
     )]
     pub token_vault: Account<'info, TokenAccount>,
 
-    #[account(
-        mut,
-    )]
+    #[account(mut)]
     //the token account to send xtoken
     pub x_token_to: Account<'info, TokenAccount>,
 
@@ -267,9 +265,7 @@ pub struct Unstake<'info> {
     )]
     pub x_token_mint: Account<'info, Mint>,
 
-    #[account(
-        mut,
-    )]
+    #[account(mut)]
     //the token account to withdraw from
     pub x_token_from: Account<'info, TokenAccount>,
 
@@ -283,9 +279,7 @@ pub struct Unstake<'info> {
     )]
     pub token_vault: Account<'info, TokenAccount>,
 
-    #[account(
-        mut,
-    )]
+    #[account(mut)]
     //the token account to send token
     pub token_to: Account<'info, TokenAccount>,
 
