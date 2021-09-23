@@ -142,6 +142,7 @@ describe('step-staking', () => {
     let price = res.events[0].data;
     console.log('Emit price: ', price.stepPerXstepE9.toString());
     console.log('Emit price: ', price.stepPerXstep.toString());
+    assert.strictEqual(price.stepPerXstep.toString(), '1.2');
   });
 
   it('Redeem xToken for token', async () => {
