@@ -165,17 +165,20 @@ pub mod step_staking {
 
 }
 
+const E9: u128 = 1000000000;
+
 pub fn get_price<'info>(vault: &Account<'info, TokenAccount>, mint: &Account<'info, Mint>) -> (u64, String) {
     let total_token = vault.amount;
     let total_x_token = mint.supply;
-    let price_uint = if total_x_token == 0 { 
+
+    if total_x_token == 0 { 
         return (0, String::from("0"))
-    } else { 
-        (total_token as u128)
-        .checked_mul(1000000000 as u128).unwrap()
+    }
+
+    let price_uint = (total_token as u128)
+        .checked_mul(E9 as u128).unwrap()
         .checked_div(total_x_token as u128).unwrap()
-        .try_into().unwrap()
-    };
+        .try_into().unwrap();
     let price_float = (total_token as f64) / (total_x_token as f64);
     return (price_uint, price_float.to_string());
 }
