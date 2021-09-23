@@ -13,6 +13,10 @@ no-entrypoint = []
 no-idl = []
 cpi = ["no-entrypoint"]
 
+#remove for testing
+default = ["production"]
+production = []
+
 [dependencies]
 anchor-lang = "0.16.1"
 anchor-spl = "0.16.1"
