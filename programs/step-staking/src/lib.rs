@@ -5,19 +5,19 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, Mint, TokenAccount};
 use std::convert::TryInto;
 
-#[cfg(feature = "production")]
+#[cfg(not(feature = "local-testing"))]
 declare_id!("UNKNOWN" fail build );
-#[cfg(not(feature = "production"))]
+#[cfg(feature = "local-testing")]
 declare_id!("STak7gf65TjoPaJvttZvinbgLy3vMMsB1ikDx1bK2mH");
 
-#[cfg(feature = "production")]
+#[cfg(not(feature = "local-testing"))]
 const STEP_TOKEN_MINT_PUBKEY: &str = "StepAscQoEioFxxWGnh2sLBDFp9d8rvKz2Yp39iDpyT";
-#[cfg(not(feature = "production"))]
+#[cfg(feature = "local-testing")]
 const STEP_TOKEN_MINT_PUBKEY: &str = "sTEPVXgcctP7rJvoNk8p2Xmo1YrMbcMfu4tgHnowtFm";
 
-#[cfg(feature = "production")]
+#[cfg(not(feature = "local-testing"))]
 const X_STEP_TOKEN_MINT_PUBKEY: &str = "xStpgUCss9piqeFUk2iLVcvJEGhAdJxJQuwLkXP555G";
-#[cfg(not(feature = "production"))]
+#[cfg(feature = "local-testing")]
 const X_STEP_TOKEN_MINT_PUBKEY: &str = "xsTPvEj7rELYcqe2D1k3M5zRe85xWWFK3x1SWDN5qPY";
 
 #[program]

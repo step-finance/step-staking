@@ -13,9 +13,9 @@ no-entrypoint = []
 no-idl = []
 cpi = ["no-entrypoint"]
 
-#remove for testing
-default = ["production"]
-production = []
+#add to default for local testing
+#default = ["local-testing"]
+local-testing = []
 
 [dependencies]
 anchor-lang = "0.16.1"
