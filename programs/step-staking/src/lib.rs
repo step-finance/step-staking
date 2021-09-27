@@ -222,7 +222,7 @@ pub struct Initialize<'info> {
     #[account(
         address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: Box<Account<'info, Mint>>,
 
     #[account(
         init,
@@ -233,7 +233,7 @@ pub struct Initialize<'info> {
         bump = _nonce,
     )]
     ///the not-yet-created, derived token vault pubkey
-    pub token_vault: Account<'info, TokenAccount>,
+    pub token_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
     ///pays rent on the initializing accounts
@@ -251,20 +251,20 @@ pub struct ReclaimMintAuthority<'info> {
     #[account(
         address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: Box<Account<'info, Mint>>,
 
     #[account(
         mut,
         address = constants::X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
-    pub x_token_mint: Account<'info, Mint>,
+    pub x_token_mint: Box<Account<'info, Mint>>,
 
     #[account(
         mut,
         seeds = [ token_mint.key().as_ref() ],
         bump = nonce,
     )]
-    pub token_vault: Account<'info, TokenAccount>,
+    pub token_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
@@ -282,17 +282,17 @@ pub struct Stake<'info> {
     #[account(
         address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: Box<Account<'info, Mint>>,
 
     #[account(
         mut,
         address = constants::X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
-    pub x_token_mint: Account<'info, Mint>,
+    pub x_token_mint: Box<Account<'info, Mint>>,
 
     #[account(mut)]
     //the token account to withdraw from
-    pub token_from: Account<'info, TokenAccount>,
+    pub token_from: Box<Account<'info, TokenAccount>>,
 
     //the authority allowed to transfer from token_from
     pub token_from_authority: Signer<'info>,
@@ -302,11 +302,11 @@ pub struct Stake<'info> {
         seeds = [ token_mint.key().as_ref() ],
         bump = nonce,
     )]
-    pub token_vault: Account<'info, TokenAccount>,
+    pub token_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
     //the token account to send xtoken
-    pub x_token_to: Account<'info, TokenAccount>,
+    pub x_token_to: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -317,17 +317,17 @@ pub struct Unstake<'info> {
     #[account(
         address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: Box<Account<'info, Mint>>,
 
     #[account(
         mut,
         address = constants::X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
-    pub x_token_mint: Account<'info, Mint>,
+    pub x_token_mint: Box<Account<'info, Mint>>,
 
     #[account(mut)]
     //the token account to withdraw from
-    pub x_token_from: Account<'info, TokenAccount>,
+    pub x_token_from: Box<Account<'info, TokenAccount>>,
 
     //the authority allowed to transfer from x_token_from
     pub x_token_from_authority: Signer<'info>,
@@ -337,11 +337,11 @@ pub struct Unstake<'info> {
         seeds = [ token_mint.key().as_ref() ],
         bump = nonce,
     )]
-    pub token_vault: Account<'info, TokenAccount>,
+    pub token_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
     //the token account to send token
-    pub token_to: Account<'info, TokenAccount>,
+    pub token_to: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -351,20 +351,20 @@ pub struct EmitPrice<'info> {
     #[account(
         address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: Box<Account<'info, Mint>>,
 
     #[account(
         mut,
         address = constants::X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
-    pub x_token_mint: Account<'info, Mint>,
+    pub x_token_mint: Box<Account<'info, Mint>>,
 
     #[account(
         mut,
         seeds = [ token_mint.key().as_ref() ],
         bump,
     )]
-    pub token_vault: Account<'info, TokenAccount>,
+    pub token_vault: Box<Account<'info, TokenAccount>>,
 }
 
 #[event]
