@@ -10,14 +10,16 @@ declare_id!("Stk5NCWomVN3itaFjLu382u9ibb5jMSHEsh6CuhaGjB");
 declare_id!("STak7gf65TjoPaJvttZvinbgLy3vMMsB1ikDx1bK2mH");
 
 #[cfg(not(feature = "local-testing"))]
-const STEP_TOKEN_MINT_PUBKEY: &str = "StepAscQoEioFxxWGnh2sLBDFp9d8rvKz2Yp39iDpyT";
-#[cfg(feature = "local-testing")]
-const STEP_TOKEN_MINT_PUBKEY: &str = "sTEPVXgcctP7rJvoNk8p2Xmo1YrMbcMfu4tgHnowtFm";
+pub mod constants {
+    pub const STEP_TOKEN_MINT_PUBKEY: &str = "StepAscQoEioFxxWGnh2sLBDFp9d8rvKz2Yp39iDpyT";
+    pub const X_STEP_TOKEN_MINT_PUBKEY: &str = "xStpgUCss9piqeFUk2iLVcvJEGhAdJxJQuwLkXP555G";
+}
 
-#[cfg(not(feature = "local-testing"))]
-const X_STEP_TOKEN_MINT_PUBKEY: &str = "xStpgUCss9piqeFUk2iLVcvJEGhAdJxJQuwLkXP555G";
 #[cfg(feature = "local-testing")]
-const X_STEP_TOKEN_MINT_PUBKEY: &str = "xsTPvEj7rELYcqe2D1k3M5zRe85xWWFK3x1SWDN5qPY";
+pub mod constants {
+    pub const STEP_TOKEN_MINT_PUBKEY: &str = "sTEPVXgcctP7rJvoNk8p2Xmo1YrMbcMfu4tgHnowtFm";
+    pub const X_STEP_TOKEN_MINT_PUBKEY: &str = "xsTPvEj7rELYcqe2D1k3M5zRe85xWWFK3x1SWDN5qPY";
+}
 
 #[program]
 pub mod step_staking {
@@ -191,7 +193,7 @@ pub fn get_price<'info>(
 #[instruction(_nonce: u8)]
 pub struct Initialize<'info> {
     #[account(
-        address = STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+        address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
     pub token_mint: Account<'info, Mint>,
 
@@ -200,7 +202,7 @@ pub struct Initialize<'info> {
         payer = initializer,
         token::mint = token_mint,
         token::authority = token_vault, //the PDA address is both the vault account and the authority (and event the mint authority)
-        seeds = [ STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap().as_ref() ],
+        seeds = [ constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap().as_ref() ],
         bump = _nonce,
     )]
     ///the not-yet-created, derived token vault pubkey
@@ -220,13 +222,13 @@ pub struct Initialize<'info> {
 #[instruction(nonce: u8)]
 pub struct Stake<'info> {
     #[account(
-        address = STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+        address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
     pub token_mint: Account<'info, Mint>,
 
     #[account(
         mut,
-        address = X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+        address = constants::X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
     pub x_token_mint: Account<'info, Mint>,
 
@@ -255,13 +257,13 @@ pub struct Stake<'info> {
 #[instruction(nonce: u8)]
 pub struct Unstake<'info> {
     #[account(
-        address = STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+        address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
     pub token_mint: Account<'info, Mint>,
 
     #[account(
         mut,
-        address = X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+        address = constants::X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
     pub x_token_mint: Account<'info, Mint>,
 
@@ -289,13 +291,13 @@ pub struct Unstake<'info> {
 #[derive(Accounts)]
 pub struct EmitPrice<'info> {
     #[account(
-        address = STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+        address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
     pub token_mint: Account<'info, Mint>,
 
     #[account(
         mut,
-        address = X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+        address = constants::X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
     )]
     pub x_token_mint: Account<'info, Mint>,
 
