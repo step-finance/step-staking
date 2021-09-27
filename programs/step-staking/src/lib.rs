@@ -2,6 +2,7 @@
 /// https://github.com/sushiswap/sushiswap/blob/master/contracts/SushiBar.sol
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount};
+use spl_token::instruction::AuthorityType;
 use std::convert::TryInto;
 
 #[cfg(not(feature = "local-testing"))]
@@ -26,6 +27,32 @@ pub mod step_staking {
     use super::*;
 
     pub fn initialize(_ctx: Context<Initialize>, _nonce: u8) -> ProgramResult {
+        Ok(())
+    }
+
+    /// Set the mint authority of xSTEP to the mint authority of the STEP token
+    /// This would be used for some rescue type operation, or deprecation of this program
+    /// After calling this operation with the correct keys (signed by the STEP mint auth)
+    /// This program would no longer function unless the mint authority were set 
+    /// back to ANYxxG365hutGYaTdtUQG8u2hC4dFX9mFHKuzy9ABQJi
+    pub fn reclaim_mint_authority(ctx: Context<ReclaimMintAuthority>, nonce: u8) -> ProgramResult {
+        let token_mint_key = ctx.accounts.token_mint.key();
+        let seeds = &[token_mint_key.as_ref(), &[nonce]];
+        let signer = [&seeds[..]];
+
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            token::SetAuthority {
+                current_authority: ctx.accounts.token_vault.to_account_info(),
+                account_or_mint: ctx.accounts.x_token_mint.to_account_info(),
+            },
+            &signer,
+        );
+        token::set_authority(
+            cpi_ctx, 
+            AuthorityType::MintTokens, 
+            Some(ctx.accounts.token_mint.mint_authority.unwrap()),
+        )?;
         Ok(())
     }
 
@@ -216,6 +243,37 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
+}
+
+#[derive(Accounts)]
+#[instruction(nonce: u8)]
+pub struct ReclaimMintAuthority<'info> {
+    #[account(
+        address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+    )]
+    pub token_mint: Account<'info, Mint>,
+
+    #[account(
+        mut,
+        address = constants::X_STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+    )]
+    pub x_token_mint: Account<'info, Mint>,
+
+    #[account(
+        mut,
+        seeds = [ token_mint.key().as_ref() ],
+        bump = nonce,
+    )]
+    pub token_vault: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        //only STEP's token authority can sign for this action
+        address = token_mint.mint_authority.unwrap(),
+    )]
+    ///the mint authority of the step token
+    pub authority: Signer<'info>,
+    pub token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]

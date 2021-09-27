@@ -14,9 +14,10 @@ no-idl = []
 cpi = ["no-entrypoint"]
 
 #add to default for local testing
-#default = ["local-testing"]
+default = ["local-testing"]
 local-testing = []
 
 [dependencies]
 anchor-lang = "0.16.1"
 anchor-spl = "0.16.1"
+spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
