@@ -48,7 +48,7 @@ describe('step-staking', () => {
 
     //this already exists in ecosystem
     //test step token hardcoded in program, mint authority is wallet for testing
-    let rawdata = fs.readFileSync('tests/keys/TESTING-sTEPVXgcctP7rJvoNk8p2Xmo1YrMbcMfu4tgHnowtFm.json');
+    let rawdata = fs.readFileSync('tests/keys/step-teST1ieLrLdr4MJPZ7i8mgSCLQ7rTrPRjNnyFdHFaz9.json');
     let keyData = JSON.parse(rawdata);
     mintKey = anchor.web3.Keypair.fromSecretKey(new Uint8Array(keyData));
     mintObject = await utils.createMint(mintKey, provider, provider.wallet.publicKey, null, 9, TOKEN_PROGRAM_ID);
@@ -62,7 +62,7 @@ describe('step-staking', () => {
 
     //this is the new xstep token
     //test xstep token hardcoded in program, mint authority is token vault
-    rawdata = fs.readFileSync('tests/keys/TESTING-xsTPvEj7rELYcqe2D1k3M5zRe85xWWFK3x1SWDN5qPY.json');
+    rawdata = fs.readFileSync('tests/keys/xstep-TestZ4qmw6fCo1uK9oJbobWDgj1sME6hR1ssWQnyjxM.json');
     keyData = JSON.parse(rawdata);
     let key = anchor.web3.Keypair.fromSecretKey(new Uint8Array(keyData));
     xMintObject = await utils.createMint(key, provider, vaultPubkey, null, 9, TOKEN_PROGRAM_ID);

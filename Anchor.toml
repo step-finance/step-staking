@@ -1,9 +1,26 @@
+anchor_version = "0.16.2"
+
+[workspace]
+members = ["programs/step-staking"]
+
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "localnet"
-wallet = "/home/danah/.config/solana/id.json"
+wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "mocha -t 1000000 tests/"
+
+[programs.localnet]
+step_staking = "TesT35sGptoswsVkcLpUUe6U2iTJZE59on1Jno8Vdpg"
+
+[programs.devnet]
+step_staking = "Stk5NCWomVN3itaFjLu382u9ibb5jMSHEsh6CuhaGjB"
+
+[programs.testnet]
+step_staking = "Stk5NCWomVN3itaFjLu382u9ibb5jMSHEsh6CuhaGjB"
+
+[programs.mainnet]
+step_staking = "Stk5NCWomVN3itaFjLu382u9ibb5jMSHEsh6CuhaGjB"
