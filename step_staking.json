@@ -3,16 +3,11 @@
   "name": "step_staking",
   "instructions": [
     {
-      "name": "initializeXMint",
+      "name": "initialize",
       "accounts": [
         {
           "name": "tokenMint",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "xTokenMint",
-          "isMut": true,
           "isSigner": false
         },
         {
@@ -41,10 +36,51 @@
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u8"
+        }
+      ]
     },
     {
-      "name": "enter",
+      "name": "reclaimMintAuthority",
+      "accounts": [
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "xTokenMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "stake",
       "accounts": [
         {
           "name": "tokenMint",
@@ -84,7 +120,7 @@
       ],
       "args": [
         {
-          "name": "mintBump",
+          "name": "nonce",
           "type": "u8"
         },
         {
@@ -94,7 +130,7 @@
       ]
     },
     {
-      "name": "exit",
+      "name": "unstake",
       "accounts": [
         {
           "name": "tokenMint",
@@ -134,7 +170,7 @@
       ],
       "args": [
         {
-          "name": "vaultBump",
+          "name": "nonce",
           "type": "u8"
         },
         {
@@ -142,9 +178,69 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "emitPrice",
+      "accounts": [
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "xTokenMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVault",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
-  "metadata": {
-    "address": "sTAKyUi6w1xNb9aMc2kjc2oUmuhMn3zxKk5mHxc8uN1"
-  }
+  "events": [
+    {
+      "name": "PriceChange",
+      "fields": [
+        {
+          "name": "oldStepPerXstepE9",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "oldStepPerXstep",
+          "type": "string",
+          "index": false
+        },
+        {
+          "name": "newStepPerXstepE9",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "newStepPerXstep",
+          "type": "string",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "Price",
+      "fields": [
+        {
+          "name": "stepPerXstepE9",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "stepPerXstep",
+          "type": "string",
+          "index": false
+        }
+      ]
+    }
+  ]
 }
