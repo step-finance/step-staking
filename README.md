@@ -69,3 +69,7 @@ anchor migrate
 This will call the `initialize` method to create the token vault. No specific calling key is needed - it can be called by anyone, and is a once only operation for PDA vault creation.  Subsequent runs will fail.
 
 Any problems in this process can be triaged in the `migrations/deploy.js` file, which is what `anchor migrate` executes.
+
+#### Set Mint Authority
+
+The mint authority of the xSTEP token must be set to the PDA vault address `ANYxxG365hutGYaTdtUQG8u2hC4dFX9mFHKuzy9ABQJi`
