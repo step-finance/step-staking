@@ -11,8 +11,7 @@ module.exports = async function (provider) {
   // Configure client to use the provider.
   anchor.setProvider(provider);
 
-  let idl = JSON.parse(fs.readFileSync("../target/idl/step_staking.json"));
-  let program = new anchor.Program(idl, "Stk5NCWomVN3itaFjLu382u9ibb5jMSHEsh6CuhaGjB", provider);
+  let program = anchor.workspace.StepStaking;
 
   let step = new anchor.web3.PublicKey("StepAscQoEioFxxWGnh2sLBDFp9d8rvKz2Yp39iDpyT");
   let xStep = new anchor.web3.PublicKey("xStpgUCss9piqeFUk2iLVcvJEGhAdJxJQuwLkXP555G");
