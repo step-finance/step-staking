@@ -42,3 +42,15 @@ anchor verify <program-id | write-buffer>
 ```
 
 A list of build artifacts can be found under [releases](https://github.com/step-finance/reward-pool/releases).
+
+### Deploy
+
+To deploy the program, use `solana program deploy` against the generated `.so` output.  I would not suggest using anchor deploy at this time; it wouldn't/couldn't really add much value.  Be sure to use `--programid <keypair>` to deploy to the correct address.
+
+Note: By default, programs are deployed to accounts that are twice the size of the original deployment. Doing so leaves room for program growth in future redeployments. For this program, I beleive that's proper - I wouldn't want to limit it, nor do I see growth beyond double.
+
+### Initial Migration
+
+After deployment for the first time, you must point your `anchor.toml` file to the network you've deployed to and run `anchor migrate`.  This will call the `initialize` method to create the token vault. No specific calling key is needed - it can be called by anyone, and is a once only operation for PDA vault creation.  Subsequent runs will fail.
+
+Any problems in this process can be triaged in the `migrations/deploy.js` file, which is what `anchor migrate` executes.
