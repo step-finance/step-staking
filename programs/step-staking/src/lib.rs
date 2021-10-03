@@ -66,7 +66,7 @@ pub mod step_staking {
         let signer = [&seeds[..]];
 
         //mint x tokens
-        if total_x_token == 0 {
+        if total_token == 0 || total_x_token == 0 {
             //no math reqd, we mint them the amount they sent us
             let cpi_ctx = CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
