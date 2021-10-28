@@ -7,7 +7,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, Mint, TokenAccount};
 use std::convert::TryInto;
 
-declare_id!("SStKpS5KY2nSyjnTNWXvQGdWJTnFhHP8FncqAUJWdzF");
+declare_id!("TesTthw7hzgLpsocLDQXS8uH7NMbqjWSvFKM7AWy1zi");
 
 #[program]
 pub mod step_staking {
@@ -20,9 +20,10 @@ pub mod step_staking {
     pub fn stake(ctx: Context<Stake>, mint_bump: u8, amount: u64) -> ProgramResult {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
+        let old_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
         //mint x tokens
-        if total_token == 0 && total_x_token == 0 {
+        if total_token == 0 || total_x_token == 0 {
             //no math reqd, we mint them the amount they sent us
             mint_to(
                 &ctx.accounts.token_program.to_account_info(),
@@ -58,12 +59,25 @@ pub mod step_staking {
         );
         token::transfer(cpi_ctx, amount)?;
 
+        (&mut ctx.accounts.token_vault).reload()?;
+        (&mut ctx.accounts.x_token_mint).reload()?;
+        
+        let new_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
+
+        emit!(PriceChange {
+            old_step_per_xstep_e9: old_price.0,
+            old_step_per_xstep: old_price.1,
+            new_step_per_xstep_e9: new_price.0,
+            new_step_per_xstep: new_price.1,
+        });
+
         Ok(())
     }
 
     pub fn unstake(ctx: Context<Unstake>, vault_bump: u8, amount: u64) -> ProgramResult {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
+        let old_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
         //burn what is being sent
         let cpi_ctx = CpiContext::new(
@@ -102,13 +116,33 @@ pub mod step_staking {
             signer,
         );
         token::transfer(cpi_ctx, what)?;
+
+        (&mut ctx.accounts.token_vault).reload()?;
+        (&mut ctx.accounts.x_token_mint).reload()?;
         
+        let new_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
+
+        emit!(PriceChange {
+            old_step_per_xstep_e9: old_price.0,
+            old_step_per_xstep: old_price.1,
+            new_step_per_xstep_e9: new_price.0,
+            new_step_per_xstep: new_price.1,
+        });
+
+        Ok(())
+    }
+
+    pub fn emit_price(ctx: Context<EmitPrice>) -> ProgramResult {
+        let price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
+        emit!(Price {
+            step_per_xstep_e9: price.0,
+            step_per_xstep: price.1,
+        });
         Ok(())
     }
 
 }
 
-//helper functions
 fn mint_to<'info>(
     token_program: &AccountInfo<'info>,
     mint: &AccountInfo<'info>, 
@@ -141,11 +175,26 @@ fn mint_to<'info>(
     Ok(())
 }
 
+pub fn get_price<'info>(vault: &Account<'info, TokenAccount>, mint: &Account<'info, Mint>) -> (u64, String) {
+    let total_token = vault.amount;
+    let total_x_token = mint.supply;
+
+    if total_x_token == 0 { 
+        return (0, String::from("0"))
+    }
+
+    let price_uint = (total_token as u128)
+        .checked_mul((10 as u64).pow(mint.decimals as u32) as u128).unwrap()
+        .checked_div(total_x_token as u128).unwrap()
+        .try_into().unwrap();
+    let price_float = (total_token as f64) / (total_x_token as f64);
+    return (price_uint, price_float.to_string());
+}
+
 #[derive(Accounts)]
 pub struct InitializeXMint<'info> {
     ///the token mint to create an xToken for
     pub token_mint: Account<'info, Mint>,
-
     #[account(
         init,
         payer = initializer,
@@ -252,4 +301,35 @@ pub struct Unstake<'info> {
     pub token_to: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct EmitPrice<'info> {
+    pub token_mint: Account<'info, Mint>,
+
+    #[account(
+        seeds = [ b"mint", token_mint.key().as_ref() ],
+        bump,
+    )]
+    pub x_token_mint: Account<'info, Mint>,
+
+    #[account(
+        seeds = [ b"vault", token_mint.key().as_ref() ],
+        bump,
+    )]
+    pub token_vault: Account<'info, TokenAccount>,
+}
+
+#[event]
+pub struct PriceChange {
+    pub old_step_per_xstep_e9: u64,
+    pub old_step_per_xstep: String,
+    pub new_step_per_xstep_e9: u64,
+    pub new_step_per_xstep: String,
+}
+
+#[event]
+pub struct Price {
+    pub step_per_xstep_e9: u64,
+    pub step_per_xstep: String,
 }

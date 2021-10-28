@@ -42,6 +42,15 @@ describe('step-staking', () => {
     mintObject = await utils.createMint(provider, 9);
     mintPubkey = mintObject.publicKey;
 
+    //setup logging event listeners
+    program.addEventListener('PriceChange', (e, s) => {
+      console.log('Price Change In Slot ', s);
+      console.log('From', e.oldStepPerXstepE9.toString());
+      console.log('From', e.oldStepPerXstep.toString());
+      console.log('To', e.newStepPerXstepE9.toString());
+      console.log('To', e.newStepPerXstep.toString());
+    });
+
     [xMintPubkey, mintBump] =
       await anchor.web3.PublicKey.findProgramAddress(
         [Buffer.from("mint"), mintPubkey.toBuffer()],
@@ -95,7 +104,7 @@ describe('step-staking', () => {
         }
       }
     );
-
+    
     assert.strictEqual(await getTokenBalance(walletTokenAccount), 95_000_000_000);
     assert.strictEqual(await getTokenBalance(walletXTokenAccount), 5_000_000_000);
     assert.strictEqual(await getTokenBalance(vaultPubkey), 5_000_000_000);
@@ -107,6 +116,22 @@ describe('step-staking', () => {
     assert.strictEqual(await getTokenBalance(walletTokenAccount), 95_000_000_000);
     assert.strictEqual(await getTokenBalance(walletXTokenAccount), 5_000_000_000);
     assert.strictEqual(await getTokenBalance(vaultPubkey), 6_000_000_000);
+  });
+
+  it('Emit the price', async () => {
+    var res = await program.simulate.emitPrice(
+      {
+        accounts: {
+          tokenMint: mintPubkey,
+          xTokenMint: xMintPubkey,
+          tokenVault: vaultPubkey,
+        }
+      }
+    )
+    let price = res.events[0].data;
+    console.log('Emit price: ', price.stepPerXstepE9.toString());
+    console.log('Emit price: ', price.stepPerXstep.toString());
+    assert.strictEqual(price.stepPerXstep.toString(), '1.2');
   });
 
   it('Redeem xToken for token', async () => {
