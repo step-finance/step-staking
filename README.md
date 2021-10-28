@@ -1,3 +1,9 @@
+<h1 align="center">
+  <br>
+   <img width="400" src="https://github.com/step-finance/step-staking/blob/main/logo.svg?raw=true" alt="step logo"/>
+  <br>
+</h1>
+
 # Reward Pool
 
 Program for single token staking and receiving rewards. Ala xSushi
