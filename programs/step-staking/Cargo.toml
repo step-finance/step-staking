@@ -16,8 +16,9 @@ cpi = ["no-entrypoint"]
 #add to default for local testing
 #default = ["local-testing"]
 local-testing = []
+test-id = []
 
 [dependencies]
-anchor-lang = "0.16.2"
-anchor-spl = "0.16.2"
+anchor-lang = "0.18.2"
+anchor-spl = "0.18.2"
 spl-token = { version = "3.1.1", features = ["no-entrypoint"] }

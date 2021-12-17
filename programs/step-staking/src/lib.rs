@@ -5,9 +5,9 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use spl_token::instruction::AuthorityType;
 use std::convert::TryInto;
 
-#[cfg(not(feature = "local-testing"))]
+#[cfg(not(feature = "test-id"))]
 declare_id!("Stk5NCWomVN3itaFjLu382u9ibb5jMSHEsh6CuhaGjB");
-#[cfg(feature = "local-testing")]
+#[cfg(feature = "test-id")]
 declare_id!("TesT35sGptoswsVkcLpUUe6U2iTJZE59on1Jno8Vdpg");
 
 #[cfg(not(feature = "local-testing"))]
