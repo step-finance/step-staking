@@ -213,7 +213,7 @@ pub fn get_price<'info>(
         .try_into()
         .unwrap();
     let price_float = (total_token as f64) / (total_x_token as f64);
-    return (price_uint, price_float.to_string());
+    (price_uint, price_float.to_string())
 }
 
 #[derive(Accounts)]
