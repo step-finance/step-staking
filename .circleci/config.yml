@@ -19,7 +19,7 @@ jobs:
       - checkout
       - run:
           name: "Soteria analysis"
-          command: "cd programs/reward-pool && soteria -analyzeAll ."
+          command: "cd programs/`ls programs/` && soteria -analyzeAll ."
       - run:
           name: "Cargo audit"
           command: "cargo audit"
