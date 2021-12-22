@@ -5,9 +5,9 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use spl_token::instruction::AuthorityType;
 use std::convert::TryInto;
 
-#[cfg(not(feature = "local-testing"))]
+#[cfg(not(feature = "test-id"))]
 declare_id!("Stk5NCWomVN3itaFjLu382u9ibb5jMSHEsh6CuhaGjB");
-#[cfg(feature = "local-testing")]
+#[cfg(feature = "test-id")]
 declare_id!("TesT35sGptoswsVkcLpUUe6U2iTJZE59on1Jno8Vdpg");
 
 #[cfg(not(feature = "local-testing"))]
@@ -33,7 +33,7 @@ pub mod step_staking {
     /// Set the mint authority of xSTEP to the mint authority of the STEP token
     /// This would be used for some rescue type operation, or deprecation of this program
     /// After calling this operation with the correct keys (signed by the STEP mint auth)
-    /// This program would no longer function unless the mint authority were set 
+    /// This program would no longer function unless the mint authority were set
     /// back to ANYxxG365hutGYaTdtUQG8u2hC4dFX9mFHKuzy9ABQJi
     pub fn reclaim_mint_authority(ctx: Context<ReclaimMintAuthority>, nonce: u8) -> ProgramResult {
         let token_mint_key = ctx.accounts.token_mint.key();
@@ -49,8 +49,8 @@ pub mod step_staking {
             &signer,
         );
         token::set_authority(
-            cpi_ctx, 
-            AuthorityType::MintTokens, 
+            cpi_ctx,
+            AuthorityType::MintTokens,
             Some(ctx.accounts.token_mint.mint_authority.unwrap()),
         )?;
         Ok(())
@@ -213,7 +213,7 @@ pub fn get_price<'info>(
         .try_into()
         .unwrap();
     let price_float = (total_token as f64) / (total_x_token as f64);
-    return (price_uint, price_float.to_string());
+    (price_uint, price_float.to_string())
 }
 
 #[derive(Accounts)]

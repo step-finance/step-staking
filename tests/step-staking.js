@@ -3,6 +3,7 @@ const { TOKEN_PROGRAM_ID, Token } = require("@solana/spl-token");
 const utils = require("./utils");
 const assert = require("assert");
 const fs = require('fs');
+const { exit } = require('process');
 
 let program = anchor.workspace.StepStaking;
 
@@ -217,8 +218,12 @@ describe('step-staking', () => {
     assert.strictEqual(await getTokenBalance(vaultPubkey), 0);
   });
 
+  return;
+
 });
 
-  async function getTokenBalance(pubkey) {
-    return parseInt((await provider.connection.getTokenAccountBalance(pubkey)).value.amount);
-  }
+exit(0);
+
+async function getTokenBalance(pubkey) {
+  return parseInt((await provider.connection.getTokenAccountBalance(pubkey)).value.amount);
+}

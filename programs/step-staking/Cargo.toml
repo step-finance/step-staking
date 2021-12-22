@@ -14,10 +14,13 @@ no-idl = []
 cpi = ["no-entrypoint"]
 
 #add to default for local testing
-#default = ["local-testing"]
+#note, can also use `anchor test -- --feature local-testing,test-id` now
+#default = ["local-testing", "test-id"]
 local-testing = []
+test-id = []
 
 [dependencies]
-anchor-lang = "0.16.2"
-anchor-spl = "0.16.2"
+anchor-lang = "0.19.0"
+anchor-spl = "0.19.0"
 spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
+solana-program = "1.8.10"
