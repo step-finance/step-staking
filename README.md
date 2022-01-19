@@ -6,13 +6,13 @@
 
 # Reward Pool
 
-Program for single token staking and receiving rewards. Ala xSushi
+Program for single token staking and receiving rewards. Ala xSushi.
 
 ## Design Overview
 
-![step-staking overview](https://github.com/step-finance/step-staking/blob/main/account-design.png)
+![account design diagram](https://github.com/step-finance/step-staking/blob/main/account-design.png?raw=true)
 
-*draw.io editable*
+*draw.io editable account design diagram*
 
 ## Note
 
@@ -79,3 +79,23 @@ Any problems in this process can be triaged in the `migrations/deploy.js` file, 
 #### Set Mint Authority
 
 The mint authority of the xSTEP token must be set to the PDA vault address `ANYxxG365hutGYaTdtUQG8u2hC4dFX9mFHKuzy9ABQJi`
+
+## FAQ
+
+---
+
+> For single token staking, how do we calculate the APR in % that the users would receive? 
+
+This has to be calculated using historical deposit data, through whatever means you are making deposits.  I would like to enhance this contract to use farm type distribution-over-time logic, but we kept this simple for now.
+
+---
+
+> what's the purpose of the emit_price handler?
+ 
+A client can use a simulate call in anchor to get back the token ratio.  Just another way of doing things - it's similar to a solidity view.
+
+---
+
+## Additional Info
+
+**Also, be sure to check out and maybe use instead the `generic` branch**.  It handles the xToken mint creation and ownership for you using a PDA.  We used what's in the `master` branch because we wanted to use a specific mint that we generated as the xToken.
