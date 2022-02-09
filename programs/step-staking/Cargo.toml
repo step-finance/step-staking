@@ -20,7 +20,8 @@ local-testing = []
 test-id = []
 
 [dependencies]
-anchor-lang = "0.19.0"
-anchor-spl = "0.19.0"
-spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
-solana-program = "1.8.10"
+anchor-lang = "=0.21.0"
+anchor-spl = "=0.21.0"
+spl-token = { version = "=3.2.0", features = ["no-entrypoint"] }
+solana-program = "=1.8.5"
+uint = "=0.9.1" 
