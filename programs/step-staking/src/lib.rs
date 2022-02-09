@@ -217,7 +217,6 @@ pub fn get_price<'info>(
 }
 
 #[derive(Accounts)]
-#[instruction(_nonce: u8)]
 pub struct Initialize<'info> {
     #[account(
         address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
@@ -230,7 +229,7 @@ pub struct Initialize<'info> {
         token::mint = token_mint,
         token::authority = token_vault, //the PDA address is both the vault account and the authority (and event the mint authority)
         seeds = [ constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap().as_ref() ],
-        bump = _nonce,
+        bump,
     )]
     ///the not-yet-created, derived token vault pubkey
     pub token_vault: Box<Account<'info, TokenAccount>>,
