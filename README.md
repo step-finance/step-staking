@@ -56,7 +56,7 @@ A list of build artifacts can be found under [releases](https://github.com/step-
 To deploy the program, configure your CLI to the desired network/wallet and run 
 
 ```bash
-solana program deploy --programid <keypair> target/verifiable/step_staking.so
+solana program deploy --program-id <keypair> target/verifiable/step_staking.so
 ```
 
 I would not suggest using anchor deploy at this time; it wouldn't/couldn't really add much value.  Be sure to use `--programid <keypair>` to deploy to the correct address.
