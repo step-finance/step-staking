@@ -65,7 +65,7 @@ Note: By default, programs are deployed to accounts that are twice the size of t
 
 ### Initial Migration
 
-After deployment for the first time, you must point your `anchor.toml` file to the network you've deployed to and run 
+After deployment for the first time, you must point your `Anchor.toml` file to the network you've deployed to and run 
 
 
 ```bash
