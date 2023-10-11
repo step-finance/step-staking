@@ -1,4 +1,4 @@
-const anchor = require('@coral-xyz/anchor');
+import anchor from "@coral-xyz/anchor";
 const { TOKEN_PROGRAM_ID, Token } = require("@solana/spl-token");
 const utils = require("./utils");
 const assert = require("assert");
@@ -219,7 +219,6 @@ describe('step-staking', () => {
   });
 
   return;
-
 });
 
 exit(0);
