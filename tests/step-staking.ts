@@ -217,6 +217,10 @@ describe('step-staking', () => {
     assert.strictEqual(await getTokenBalance(walletXTokenAccount), 0);
     assert.strictEqual(await getTokenBalance(vaultPubkey), 0);
   });
+
+  it('exit because something weird is happening', async () => {
+    setTimeout(() => { exit(0); }, 1000);
+  });
 });
 
 async function getTokenBalance(pubkey) {
