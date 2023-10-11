@@ -1,9 +1,9 @@
-import anchor from "@coral-xyz/anchor";
-const { TOKEN_PROGRAM_ID, Token } = require("@solana/spl-token");
-const utils = require("./utils");
-const assert = require("assert");
-const fs = require('fs');
-const { exit } = require('process');
+import * as anchor from '@coral-xyz/anchor';
+import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import * as utils from "./utils";
+import * as assert from "assert";
+import * as fs from 'fs';
+import { exit } from 'process';
 
 let program = anchor.workspace.StepStaking;
 
