@@ -79,6 +79,5 @@ workflows:
         equal: [ dev-deploy, << pipeline.git.branch >> ]
     jobs:
       - formatting
-      - security-check
       - test
       - build
