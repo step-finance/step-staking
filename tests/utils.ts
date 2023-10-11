@@ -1,7 +1,7 @@
-const anchor = require("@coral-xyz/anchor");
-const { TOKEN_PROGRAM_ID, Token, MintLayout } = require("@solana/spl-token");
+import * as anchor from "@coral-xyz/anchor";
+import { TOKEN_PROGRAM_ID, Token, MintLayout } from "@solana/spl-token";
 
-async function createRandomMint(provider, decimals) {
+export async function createRandomMint(provider, decimals) {
     const mint = await Token.createMint(
         provider.connection,
         provider.wallet.payer,
@@ -13,7 +13,7 @@ async function createRandomMint(provider, decimals) {
     return mint;
 }
 
-async function mintToAccount(
+export async function mintToAccount(
     provider,
     mint,
     destination,
@@ -30,10 +30,10 @@ async function mintToAccount(
         amount
       )
     );
-    await provider.send(tx);
+    await provider.sendAndConfirm(tx);
 }
 
-async function sendLamports(
+export async function sendLamports(
     provider,
     destination,
     amount
@@ -48,10 +48,10 @@ async function sendLamports(
             }
         )
     );
-    await provider.send(tx);
+    await provider.sendAndConfirm(tx);
 }
 
-async function createMint(
+export async function createMint(
     mintAccount,
     provider,
     mintAuthority,
@@ -92,14 +92,6 @@ async function createMint(
         ),
     );
   
-    await provider.send(transaction, [mintAccount]);
+    await provider.sendAndConfirm(transaction, [mintAccount]);
     return token;
 }
-
-
-module.exports = {
-    createRandomMint,
-    createMint,
-    mintToAccount,
-    sendLamports,
-};

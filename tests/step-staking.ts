@@ -50,7 +50,7 @@ describe('step-staking', () => {
     //this already exists in ecosystem
     //test step token hardcoded in program, mint authority is wallet for testing
     let rawdata = fs.readFileSync('tests/keys/step-teST1ieLrLdr4MJPZ7i8mgSCLQ7rTrPRjNnyFdHFaz9.json');
-    let keyData = JSON.parse(rawdata);
+    let keyData = JSON.parse(rawdata.toString());
     mintKey = anchor.web3.Keypair.fromSecretKey(new Uint8Array(keyData));
     mintObject = await utils.createMint(mintKey, provider, provider.wallet.publicKey, null, 9, TOKEN_PROGRAM_ID);
     mintPubkey = mintObject.publicKey;
@@ -64,7 +64,7 @@ describe('step-staking', () => {
     //this is the new xstep token
     //test xstep token hardcoded in program, mint authority is token vault
     rawdata = fs.readFileSync('tests/keys/xstep-TestZ4qmw6fCo1uK9oJbobWDgj1sME6hR1ssWQnyjxM.json');
-    keyData = JSON.parse(rawdata);
+    keyData = JSON.parse(rawdata.toString());
     let key = anchor.web3.Keypair.fromSecretKey(new Uint8Array(keyData));
     xMintObject = await utils.createMint(key, provider, vaultPubkey, null, 9, TOKEN_PROGRAM_ID);
     xMintPubkey = xMintObject.publicKey;
@@ -217,11 +217,7 @@ describe('step-staking', () => {
     assert.strictEqual(await getTokenBalance(walletXTokenAccount), 0);
     assert.strictEqual(await getTokenBalance(vaultPubkey), 0);
   });
-
-  return;
 });
-
-exit(0);
 
 async function getTokenBalance(pubkey) {
   return parseInt((await provider.connection.getTokenAccountBalance(pubkey)).value.amount);
