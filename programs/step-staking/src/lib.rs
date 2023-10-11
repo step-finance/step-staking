@@ -1,7 +1,10 @@
 ///A Solana version of the xSushi contract for STEP
 /// https://github.com/sushiswap/sushiswap/blob/master/contracts/SushiBar.sol
 use anchor_lang::prelude::*;
-use anchor_spl::{token::{self, Mint, Token, TokenAccount, spl_token::instruction::AuthorityType}, associated_token::AssociatedToken};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{self, spl_token::instruction::AuthorityType, Mint, Token, TokenAccount},
+};
 use std::convert::TryInto;
 
 #[cfg(not(feature = "test-id"))]
@@ -135,8 +138,8 @@ pub mod step_staking {
         );
         token::transfer(cpi_ctx, amount)?;
 
-        (&mut ctx.accounts.token_vault).reload()?;
-        (&mut ctx.accounts.x_token_mint).reload()?;
+        ctx.accounts.token_vault.reload()?;
+        ctx.accounts.x_token_mint.reload()?;
 
         let new_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
@@ -192,8 +195,8 @@ pub mod step_staking {
         );
         token::transfer(cpi_ctx, what)?;
 
-        (&mut ctx.accounts.token_vault).reload()?;
-        (&mut ctx.accounts.x_token_mint).reload()?;
+        ctx.accounts.token_vault.reload()?;
+        ctx.accounts.x_token_mint.reload()?;
 
         let new_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
@@ -231,7 +234,7 @@ pub fn get_price<'info>(
     }
 
     let price_uint = (total_token as u128)
-        .checked_mul(E9 as u128)
+        .checked_mul(E9)
         .unwrap()
         .checked_div(total_x_token as u128)
         .unwrap()
@@ -271,9 +274,7 @@ pub struct Initialize<'info> {
 
 #[derive(Accounts)]
 pub struct WithdrawNested<'info> {
-    #[account(
-        mut,
-    )]
+    #[account(mut)]
     refundee: SystemAccount<'info>,
 
     #[account(
