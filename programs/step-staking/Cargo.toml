@@ -1,6 +1,6 @@
 [package]
 name = "step-staking"
-version = "0.1.0"
+version = "0.1.1"
 description = "Created with Anchor"
 edition = "2018"
 
@@ -20,8 +20,7 @@ local-testing = []
 test-id = []
 
 [dependencies]
-anchor-lang = "=0.21.0"
-anchor-spl = "=0.21.0"
-spl-token = { version = "=3.2.0", features = ["no-entrypoint"] }
-solana-program = "=1.8.5"
+anchor-lang = { version = "=0.28.0" }
+anchor-spl = "=0.28.0"
+spl-token = { version = "=4.0.0", features = ["no-entrypoint"] }
 uint = "=0.9.1" 

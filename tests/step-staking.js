@@ -1,4 +1,4 @@
-const anchor = require('@project-serum/anchor');
+const anchor = require('@coral-xyz/anchor');
 const { TOKEN_PROGRAM_ID, Token } = require("@solana/spl-token");
 const utils = require("./utils");
 const assert = require("assert");
@@ -10,7 +10,7 @@ let program = anchor.workspace.StepStaking;
 //Read the provider from the configured environment.
 //represents an outside actor
 //owns mints out of any other actors control, provides initial $$ to others
-const envProvider = anchor.Provider.env();
+const envProvider = anchor.AnchorProvider.env();
 
 //we allow this convenience var to change between default env and mock user(s)
 //initially we are the outside actor

@@ -1,4 +1,4 @@
-const anchor = require("@project-serum/anchor");
+const anchor = require("@coral-xyz/anchor");
 const { TOKEN_PROGRAM_ID, Token, MintLayout } = require("@solana/spl-token");
 
 async function createRandomMint(provider, decimals) {

@@ -1,8 +1,7 @@
 ///A Solana version of the xSushi contract for STEP
 /// https://github.com/sushiswap/sushiswap/blob/master/contracts/SushiBar.sol
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount};
-use spl_token::instruction::AuthorityType;
+use anchor_spl::{token::{self, Mint, Token, TokenAccount, spl_token::instruction::AuthorityType}, associated_token::AssociatedToken};
 use std::convert::TryInto;
 
 #[cfg(not(feature = "test-id"))]
@@ -26,7 +25,33 @@ pub mod constants {
 pub mod step_staking {
     use super::*;
 
-    pub fn initialize(_ctx: Context<Initialize>, _nonce: u8) -> ProgramResult {
+    pub fn initialize(_ctx: Context<Initialize>, _nonce: u8) -> Result<()> {
+        Ok(())
+    }
+
+    /// In the case that somehow someone sends token to the vaults address but
+    /// uses an ATA and the funds are at the ATA of the vault, this crank pulls
+    /// it back out and into the vault.
+    /// No authority or signer is required for this call.  It is a crank which
+    /// always does the exact same thing regardless of caller.
+    pub fn withdraw_nested(ctx: Context<WithdrawNested>) -> Result<()> {
+        //compute vault signer seeds
+        let token_mint_key = ctx.accounts.token_mint.key();
+        let seeds = &[token_mint_key.as_ref(), &[ctx.bumps["token_vault"]]];
+        let signer = &[&seeds[..]];
+
+        //transfer from vault ata to vault
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            token::Transfer {
+                from: ctx.accounts.token_vault_nested_ata.to_account_info(),
+                to: ctx.accounts.token_vault.to_account_info(),
+                authority: ctx.accounts.token_vault.to_account_info(),
+            },
+            signer,
+        );
+        token::transfer(cpi_ctx, ctx.accounts.token_vault_nested_ata.amount)?;
+
         Ok(())
     }
 
@@ -35,7 +60,7 @@ pub mod step_staking {
     /// After calling this operation with the correct keys (signed by the STEP mint auth)
     /// This program would no longer function unless the mint authority were set
     /// back to ANYxxG365hutGYaTdtUQG8u2hC4dFX9mFHKuzy9ABQJi
-    pub fn reclaim_mint_authority(ctx: Context<ReclaimMintAuthority>, nonce: u8) -> ProgramResult {
+    pub fn reclaim_mint_authority(ctx: Context<ReclaimMintAuthority>, nonce: u8) -> Result<()> {
         let token_mint_key = ctx.accounts.token_mint.key();
         let seeds = &[token_mint_key.as_ref(), &[nonce]];
         let signer = [&seeds[..]];
@@ -56,7 +81,7 @@ pub mod step_staking {
         Ok(())
     }
 
-    pub fn stake(ctx: Context<Stake>, nonce: u8, amount: u64) -> ProgramResult {
+    pub fn stake(ctx: Context<Stake>, nonce: u8, amount: u64) -> Result<()> {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
         let old_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
@@ -125,7 +150,7 @@ pub mod step_staking {
         Ok(())
     }
 
-    pub fn unstake(ctx: Context<Unstake>, nonce: u8, amount: u64) -> ProgramResult {
+    pub fn unstake(ctx: Context<Unstake>, nonce: u8, amount: u64) -> Result<()> {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
         let old_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
@@ -135,7 +160,7 @@ pub mod step_staking {
             ctx.accounts.token_program.to_account_info(),
             token::Burn {
                 mint: ctx.accounts.x_token_mint.to_account_info(),
-                to: ctx.accounts.x_token_from.to_account_info(),
+                from: ctx.accounts.x_token_from.to_account_info(),
                 authority: ctx.accounts.x_token_from_authority.to_account_info(),
             },
         );
@@ -182,7 +207,7 @@ pub mod step_staking {
         Ok(())
     }
 
-    pub fn emit_price(ctx: Context<EmitPrice>) -> ProgramResult {
+    pub fn emit_price(ctx: Context<EmitPrice>) -> Result<()> {
         let price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
         emit!(Price {
             step_per_xstep_e9: price.0,
@@ -242,6 +267,37 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
+}
+
+#[derive(Accounts)]
+pub struct WithdrawNested<'info> {
+    #[account(
+        mut,
+    )]
+    refundee: SystemAccount<'info>,
+
+    #[account(
+        address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
+    )]
+    pub token_mint: Box<Account<'info, Mint>>,
+
+    #[account(
+        mut,
+        seeds = [ token_mint.key().as_ref() ],
+        bump,
+    )]
+    pub token_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        associated_token::mint = token_mint,
+        associated_token::authority = token_vault,
+        close = refundee,
+    )]
+    pub token_vault_nested_ata: Box<Account<'info, TokenAccount>>,
+
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 #[derive(Accounts)]
