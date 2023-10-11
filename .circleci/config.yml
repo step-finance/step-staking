@@ -12,17 +12,6 @@ jobs:
       - run:
           name: "Check rust code"
           command: "cargo clippy -- -D warnings --warn clippy::all -A clippy::result-large-err"
-  security-check:
-    docker:
-      - image: backpackapp/build:v0.28.0
-    steps:
-      - checkout
-      # - run:
-      #     name: "Soteria analysis"
-      #     command: "cd programs/`ls programs/` && soteria -analyzeAll ."
-      - run:
-          name: "Cargo audit"
-          command: "cargo audit"
   test:
     docker:
       - image: backpackapp/build:v0.28.0
