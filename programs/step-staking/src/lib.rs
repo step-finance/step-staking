@@ -55,6 +55,18 @@ pub mod step_staking {
         );
         token::transfer(cpi_ctx, ctx.accounts.token_vault_nested_ata.amount)?;
 
+        //close the token account
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            token::CloseAccount {
+                account: ctx.accounts.token_vault_nested_ata.to_account_info(),
+                destination: ctx.accounts.refundee.to_account_info(),
+                authority: ctx.accounts.token_vault.to_account_info(),
+            },
+            signer,
+        );
+        token::close_account(cpi_ctx)?;
+
         Ok(())
     }
 
@@ -293,7 +305,6 @@ pub struct WithdrawNested<'info> {
         mut,
         associated_token::mint = token_mint,
         associated_token::authority = token_vault,
-        close = refundee,
     )]
     pub token_vault_nested_ata: Box<Account<'info, TokenAccount>>,
 

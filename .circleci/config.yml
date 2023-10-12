@@ -17,15 +17,12 @@ jobs:
       - image: backpackapp/build:v0.28.0
     steps:
       - checkout
-      # - run:
-      #     name: "Unit tests"
-      #     command: "cargo test --lib"
       - run:
           name: "Anchor tests"
           command: |
             npm i
             solana-keygen new -s --no-bip39-passphrase
-            anchor test
+            anchor test -- --features local-testing,test-id
       - store_artifacts:
           path: /root/project/.anchor/program-logs
           destination: program-logs
