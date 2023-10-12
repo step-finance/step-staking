@@ -3,8 +3,9 @@
 // single deploy script that's invoked from the CLI, injecting a provider
 // configured from the workspace's Anchor.toml.
 
-const anchor = require("@project-serum/anchor");
+const anchor = require("@coral-xyz/anchor");
 const { TOKEN_PROGRAM_ID } = require("@solana/spl-token");
+const NewToken = require("new-spl-token");
 const fs = require('fs');
 
 module.exports = async function (provider) {
@@ -21,19 +22,30 @@ module.exports = async function (provider) {
       [step.toBuffer()],
       program.programId
     );
+    
+  const badAta = NewToken.getAssociatedTokenAddressSync(step, vaultPubkey, true);
   
-  await program.rpc.initialize(
-    vaultBump,
+  // await program.rpc.initialize(
+  //   vaultBump,
+  //   {
+  //     accounts: {
+  //       tokenMint: step,
+  //       xTokenMint: xStep,
+  //       tokenVault: vaultPubkey,
+  //       initializer: provider.wallet.publicKey,
+  //       systemProgram: anchor.web3.SystemProgram.programId,
+  //       tokenProgram: TOKEN_PROGRAM_ID,
+  //       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+  //     }
+  //   }
+  // );
+
+  await program.methods.withdrawNested().accounts(
     {
-      accounts: {
         tokenMint: step,
-        xTokenMint: xStep,
         tokenVault: vaultPubkey,
-        initializer: provider.wallet.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-      }
+        refundee: provider.wallet.publicKey,
+        tokenVaultNestedAta: badAta,
     }
-  );
+  ).rpc();
 }
