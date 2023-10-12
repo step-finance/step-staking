@@ -45,7 +45,7 @@ jobs:
           destination: types
   deploy-devnet:
     docker:
-      - image: glacialengineering/solana-build:0.21.0.1
+      - image: backpackapp/build:v0.28.0
     steps:
       - checkout
       - run:
