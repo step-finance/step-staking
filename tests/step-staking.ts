@@ -1,16 +1,18 @@
-const anchor = require('@project-serum/anchor');
-const { TOKEN_PROGRAM_ID, Token } = require("@solana/spl-token");
-const utils = require("./utils");
-const assert = require("assert");
-const fs = require('fs');
-const { exit } = require('process');
+import * as anchor from '@coral-xyz/anchor';
+import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import * as NewToken from "new-spl-token";
+import * as utils from "./utils";
+import * as assert from "assert";
+import * as fs from 'fs';
+import { exit } from 'process';
+import { StepStaking } from "../target/types/step_staking";
 
-let program = anchor.workspace.StepStaking;
+let program = anchor.workspace.StepStaking as anchor.Program<StepStaking>;
 
 //Read the provider from the configured environment.
 //represents an outside actor
 //owns mints out of any other actors control, provides initial $$ to others
-const envProvider = anchor.Provider.env();
+const envProvider = anchor.AnchorProvider.env();
 
 //we allow this convenience var to change between default env and mock user(s)
 //initially we are the outside actor
@@ -28,7 +30,7 @@ setProvider(provider);
 describe('step-staking', () => {
   //hardcoded in program, read from test keys directory for testing
   let mintKey;
-  let mintObject;
+  let mintObject: Token;
   let mintPubkey;
   let xMintObject;
   let xMintPubkey;
@@ -50,7 +52,7 @@ describe('step-staking', () => {
     //this already exists in ecosystem
     //test step token hardcoded in program, mint authority is wallet for testing
     let rawdata = fs.readFileSync('tests/keys/step-teST1ieLrLdr4MJPZ7i8mgSCLQ7rTrPRjNnyFdHFaz9.json');
-    let keyData = JSON.parse(rawdata);
+    let keyData = JSON.parse(rawdata.toString());
     mintKey = anchor.web3.Keypair.fromSecretKey(new Uint8Array(keyData));
     mintObject = await utils.createMint(mintKey, provider, provider.wallet.publicKey, null, 9, TOKEN_PROGRAM_ID);
     mintPubkey = mintObject.publicKey;
@@ -64,7 +66,7 @@ describe('step-staking', () => {
     //this is the new xstep token
     //test xstep token hardcoded in program, mint authority is token vault
     rawdata = fs.readFileSync('tests/keys/xstep-TestZ4qmw6fCo1uK9oJbobWDgj1sME6hR1ssWQnyjxM.json');
-    keyData = JSON.parse(rawdata);
+    keyData = JSON.parse(rawdata.toString());
     let key = anchor.web3.Keypair.fromSecretKey(new Uint8Array(keyData));
     xMintObject = await utils.createMint(key, provider, vaultPubkey, null, 9, TOKEN_PROGRAM_ID);
     xMintPubkey = xMintObject.publicKey;
@@ -218,11 +220,32 @@ describe('step-staking', () => {
     assert.strictEqual(await getTokenBalance(vaultPubkey), 0);
   });
 
-  return;
+  it('Can rescue ata funds if someone accidentally creates an ata off vault', async () => {
+    const badAta = NewToken.getAssociatedTokenAddressSync(mintPubkey, vaultPubkey, true);
+    const tx = new anchor.web3.Transaction().add(
+      await NewToken.createAssociatedTokenAccountInstruction(provider.wallet.publicKey, badAta, vaultPubkey, mintPubkey)
+    );
+    await provider.sendAndConfirm(tx);
 
+    await utils.mintToAccount(provider, mintPubkey, badAta, 1_000_000_000);
+    await program.methods.withdrawNested().accounts(
+      {
+          tokenMint: mintPubkey,
+          tokenVault: vaultPubkey,
+          refundee: provider.wallet.publicKey,
+          tokenVaultNestedAta: badAta,
+      }
+    ).rpc();
+
+    const ataA = await provider.connection.getAccountInfo(badAta);
+    assert.strictEqual(ataA, null);
+    assert.strictEqual(await getTokenBalance(vaultPubkey), 1_000_000_000);
+  });
+
+  it('exit because something weird is happening', async () => {
+    setTimeout(() => { exit(0); }, 1000);
+  });
 });
-
-exit(0);
 
 async function getTokenBalance(pubkey) {
   return parseInt((await provider.connection.getTokenAccountBalance(pubkey)).value.amount);
