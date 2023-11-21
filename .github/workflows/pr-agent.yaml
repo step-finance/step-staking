@@ -1,0 +1,25 @@
+name: PR-Agent
+
+on:
+    pull_request:
+    issue_comment:
+
+jobs:
+  pr_agent_job:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: write
+    name: Run pr agent on every pull request, respond to user comments
+    steps:
+      - name: PR Agent action step
+        id: pragent
+        uses: Codium-ai/pr-agent@main
+        env:
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_action.auto_review: "true" # Enable auto review
+          github_action.auto_describe: "false" # Enable auto describe
+          github_action.auto_improve: "false" # Disable auto improve
+          github_action.model: "gpt-4-0613"
