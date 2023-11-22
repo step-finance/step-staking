@@ -1,22 +1,20 @@
 version: 2.1
 
 jobs:
-  formatting:
+  lint-test-build:
     docker:
       - image: backpackapp/build:v0.28.0
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - cargo-v1-{{ checksum "Cargo.lock" }}
       - run:
           name: "Format rust code"
           command: "cargo fmt --all -- --check"
       - run:
           name: "Check rust code"
           command: "cargo clippy -- -D warnings --warn clippy::all -A clippy::result-large-err"
-  test:
-    docker:
-      - image: backpackapp/build:v0.28.0
-    steps:
-      - checkout
       - run:
           name: "Anchor tests"
           command: |
@@ -26,14 +24,13 @@ jobs:
       - store_artifacts:
           path: /root/project/.anchor/program-logs
           destination: program-logs
-  build:
-    docker:
-      - image: backpackapp/build:v0.28.0
-    steps:
-      - checkout
       - run:
           name: "Build program"
           command: "anchor build && rm ./target/deploy/*.json && cd ./target/deploy && sha256sum * > sha256.txt"
+      - save_cache:
+          key: cargo-v1-{{ checksum "Cargo.lock" }}
+          paths:
+            - ~/.cargo
       - store_artifacts:
           path: /root/project/target/deploy
           destination: bpf-programs
@@ -43,37 +40,7 @@ jobs:
       - store_artifacts:
           path: /root/project/target/types
           destination: types
-  deploy-devnet:
-    docker:
-      - image: backpackapp/build:v0.28.0
-    steps:
-      - checkout
-      - run:
-          name: "Deploy"
-          command: |
-            echo "$SOLANA_DEV_AUTHORITY_KEY" > auth-key.json
-            anchor build -- --features test-id
-            export PGM=`ls ./target/deploy/*.so`
-            echo "deploying $PGM"
-            solana program deploy -u d -k ./auth-key.json --program-id Stk5NCWomVN3itaFjLu382u9ibb5jMSHEsh6CuhaGjB $PGM
 workflows:
-  dev-deploy:
-    when:
-      equal: [ dev-deploy, << pipeline.git.branch >> ]
-    jobs:
-      - build
-      - approve-deploy-devnet:
-          type: approval
-          requires:
-            - build
-      - deploy-devnet:
-          requires:
-            - approve-deploy-devnet
   build-test:
-    when:
-      not:
-        equal: [ dev-deploy, << pipeline.git.branch >> ]
     jobs:
-      - formatting
-      - test
-      - build
+      - lint-test-build
