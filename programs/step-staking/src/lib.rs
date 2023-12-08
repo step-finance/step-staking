@@ -32,44 +32,6 @@ pub mod step_staking {
         Ok(())
     }
 
-    /// In the case that somehow someone sends token to the vaults address but
-    /// uses an ATA and the funds are at the ATA of the vault, this crank pulls
-    /// it back out and into the vault.
-    /// No authority or signer is required for this call.  It is a crank which
-    /// always does the exact same thing regardless of caller.
-    pub fn withdraw_nested(ctx: Context<WithdrawNested>) -> Result<()> {
-        //compute vault signer seeds
-        let token_mint_key = ctx.accounts.token_mint.key();
-        let seeds = &[token_mint_key.as_ref(), &[ctx.bumps["token_vault"]]];
-        let signer = &[&seeds[..]];
-
-        //transfer from vault ata to vault
-        let cpi_ctx = CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            token::Transfer {
-                from: ctx.accounts.token_vault_nested_ata.to_account_info(),
-                to: ctx.accounts.token_vault.to_account_info(),
-                authority: ctx.accounts.token_vault.to_account_info(),
-            },
-            signer,
-        );
-        token::transfer(cpi_ctx, ctx.accounts.token_vault_nested_ata.amount)?;
-
-        //close the token account
-        let cpi_ctx = CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            token::CloseAccount {
-                account: ctx.accounts.token_vault_nested_ata.to_account_info(),
-                destination: ctx.accounts.refundee.to_account_info(),
-                authority: ctx.accounts.token_vault.to_account_info(),
-            },
-            signer,
-        );
-        token::close_account(cpi_ctx)?;
-
-        Ok(())
-    }
-
     pub fn stake(ctx: Context<Stake>, nonce: u8, amount: u64) -> Result<()> {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
@@ -256,34 +218,6 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
-}
-
-#[derive(Accounts)]
-pub struct WithdrawNested<'info> {
-    #[account(mut)]
-    refundee: SystemAccount<'info>,
-
-    #[account(
-        address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
-    )]
-    pub token_mint: Box<Account<'info, Mint>>,
-
-    #[account(
-        mut,
-        seeds = [ token_mint.key().as_ref() ],
-        bump,
-    )]
-    pub token_vault: Box<Account<'info, TokenAccount>>,
-
-    #[account(
-        mut,
-        associated_token::mint = token_mint,
-        associated_token::authority = token_vault,
-    )]
-    pub token_vault_nested_ata: Box<Account<'info, TokenAccount>>,
-
-    pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 #[derive(Accounts)]
