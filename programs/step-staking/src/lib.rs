@@ -1,10 +1,7 @@
 ///A Solana version of the xSushi contract for STEP
 /// https://github.com/sushiswap/sushiswap/blob/master/contracts/SushiBar.sol
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token::{self, spl_token::instruction::AuthorityType, Mint, Token, TokenAccount},
-};
+use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use std::convert::TryInto;
 
 #[cfg(not(feature = "test-id"))]
@@ -28,16 +25,17 @@ pub mod constants {
 pub mod step_staking {
     use super::*;
 
-    pub fn initialize(_ctx: Context<Initialize>, _nonce: u8) -> Result<()> {
+    pub fn initialize(_ctx: Context<Initialize>) -> Result<()> {
         Ok(())
     }
 
-    pub fn stake(ctx: Context<Stake>, nonce: u8, amount: u64) -> Result<()> {
+    pub fn stake(ctx: Context<Stake>, amount: u64) -> Result<()> {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
         let old_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
         let token_mint_key = ctx.accounts.token_mint.key();
+        let nonce = ctx.bumps["token_vault"];
         let seeds = &[token_mint_key.as_ref(), &[nonce]];
         let signer = [&seeds[..]];
 
@@ -101,7 +99,7 @@ pub mod step_staking {
         Ok(())
     }
 
-    pub fn unstake(ctx: Context<Unstake>, nonce: u8, amount: u64) -> Result<()> {
+    pub fn unstake(ctx: Context<Unstake>, amount: u64) -> Result<()> {
         let total_token = ctx.accounts.token_vault.amount;
         let total_x_token = ctx.accounts.x_token_mint.supply;
         let old_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
@@ -128,6 +126,7 @@ pub mod step_staking {
 
         //compute vault signer seeds
         let token_mint_key = ctx.accounts.token_mint.key();
+        let nonce = ctx.bumps["token_vault"];
         let seeds = &[token_mint_key.as_ref(), &[nonce]];
         let signer = &[&seeds[..]];
 
@@ -221,7 +220,6 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(nonce: u8)]
 pub struct Stake<'info> {
     #[account(
         address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
@@ -244,7 +242,7 @@ pub struct Stake<'info> {
     #[account(
         mut,
         seeds = [ token_mint.key().as_ref() ],
-        bump = nonce,
+        bump,
     )]
     pub token_vault: Box<Account<'info, TokenAccount>>,
 
@@ -256,7 +254,6 @@ pub struct Stake<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(nonce: u8)]
 pub struct Unstake<'info> {
     #[account(
         address = constants::STEP_TOKEN_MINT_PUBKEY.parse::<Pubkey>().unwrap(),
@@ -279,7 +276,7 @@ pub struct Unstake<'info> {
     #[account(
         mut,
         seeds = [ token_mint.key().as_ref() ],
-        bump = nonce,
+        bump,
     )]
     pub token_vault: Box<Account<'info, TokenAccount>>,
 

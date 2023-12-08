@@ -78,7 +78,6 @@ describe('step-staking', () => {
       );
 
     await program.rpc.initialize(
-      vaultBump,
       {
         accounts: {
           tokenMint: mintPubkey,
@@ -104,7 +103,6 @@ describe('step-staking', () => {
 
   it('Swap token for xToken', async () => {
     await program.rpc.stake(
-      vaultBump,
       new anchor.BN(5_000_000_000),
       {
         accounts: {
@@ -150,7 +148,6 @@ describe('step-staking', () => {
 
   it('Redeem xToken for token', async () => {
     await program.rpc.unstake(
-      vaultBump,
       new anchor.BN(5_000_000_000),
       {
         accounts: {
@@ -178,7 +175,6 @@ describe('step-staking', () => {
 
   it('Swap token for xToken on prefilled pool', async () => {
     await program.rpc.stake(
-      vaultBump,
       new anchor.BN(5_000_000_000),
       {
         accounts: {
@@ -200,7 +196,6 @@ describe('step-staking', () => {
 
   it('Redeem xToken for token after prefilled pool', async () => {
     await program.rpc.unstake(
-      vaultBump,
       new anchor.BN(5_000_000_000),
       {
         accounts: {
