@@ -35,7 +35,7 @@ pub mod step_staking {
         let old_price = get_price(&ctx.accounts.token_vault, &ctx.accounts.x_token_mint);
 
         let token_mint_key = ctx.accounts.token_mint.key();
-        let nonce = ctx.bumps["token_vault"];
+        let nonce = ctx.bumps.token_vault;
         let seeds = &[token_mint_key.as_ref(), &[nonce]];
         let signer = [&seeds[..]];
 
@@ -126,7 +126,7 @@ pub mod step_staking {
 
         //compute vault signer seeds
         let token_mint_key = ctx.accounts.token_mint.key();
-        let nonce = ctx.bumps["token_vault"];
+        let nonce = ctx.bumps.token_vault;
         let seeds = &[token_mint_key.as_ref(), &[nonce]];
         let signer = &[&seeds[..]];
 
