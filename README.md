@@ -4,7 +4,7 @@
   <br>
 </h1>
 
-# Reward Pool
+# Step Staking
 
 Program for single token staking and receiving rewards. Ala xSushi.
 
