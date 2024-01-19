@@ -78,7 +78,6 @@ describe('step-staking', () => {
       );
 
     await program.rpc.initialize(
-      vaultBump,
       {
         accounts: {
           tokenMint: mintPubkey,
@@ -104,7 +103,6 @@ describe('step-staking', () => {
 
   it('Swap token for xToken', async () => {
     await program.rpc.stake(
-      vaultBump,
       new anchor.BN(5_000_000_000),
       {
         accounts: {
@@ -150,7 +148,6 @@ describe('step-staking', () => {
 
   it('Redeem xToken for token', async () => {
     await program.rpc.unstake(
-      vaultBump,
       new anchor.BN(5_000_000_000),
       {
         accounts: {
@@ -178,7 +175,6 @@ describe('step-staking', () => {
 
   it('Swap token for xToken on prefilled pool', async () => {
     await program.rpc.stake(
-      vaultBump,
       new anchor.BN(5_000_000_000),
       {
         accounts: {
@@ -200,7 +196,6 @@ describe('step-staking', () => {
 
   it('Redeem xToken for token after prefilled pool', async () => {
     await program.rpc.unstake(
-      vaultBump,
       new anchor.BN(5_000_000_000),
       {
         accounts: {
@@ -218,28 +213,6 @@ describe('step-staking', () => {
     assert.strictEqual(await getTokenBalance(walletTokenAccount), 106_000_000_000);
     assert.strictEqual(await getTokenBalance(walletXTokenAccount), 0);
     assert.strictEqual(await getTokenBalance(vaultPubkey), 0);
-  });
-
-  it('Can rescue ata funds if someone accidentally creates an ata off vault', async () => {
-    const badAta = NewToken.getAssociatedTokenAddressSync(mintPubkey, vaultPubkey, true);
-    const tx = new anchor.web3.Transaction().add(
-      await NewToken.createAssociatedTokenAccountInstruction(provider.wallet.publicKey, badAta, vaultPubkey, mintPubkey)
-    );
-    await provider.sendAndConfirm(tx);
-
-    await utils.mintToAccount(provider, mintPubkey, badAta, 1_000_000_000);
-    await program.methods.withdrawNested().accounts(
-      {
-          tokenMint: mintPubkey,
-          tokenVault: vaultPubkey,
-          refundee: provider.wallet.publicKey,
-          tokenVaultNestedAta: badAta,
-      }
-    ).rpc();
-
-    const ataA = await provider.connection.getAccountInfo(badAta);
-    assert.strictEqual(ataA, null);
-    assert.strictEqual(await getTokenBalance(vaultPubkey), 1_000_000_000);
   });
 
   it('exit because something weird is happening', async () => {

@@ -20,7 +20,7 @@ local-testing = []
 test-id = []
 
 [dependencies]
-anchor-lang = { version = "=0.28.0" }
-anchor-spl = "=0.28.0"
+anchor-lang = { version = "=0.29.0" }
+anchor-spl = "=0.29.0"
 spl-token = { version = "=4.0.0", features = ["no-entrypoint"] }
 uint = "=0.9.1" 

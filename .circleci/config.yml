@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   lint-test-build:
     docker:
-      - image: backpackapp/build:v0.28.0
+      - image: backpackapp/build:v0.29.0
     steps:
       - checkout
       - restore_cache:
